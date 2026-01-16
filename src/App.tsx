@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
+import { AvatarUpload } from './components/AvatarUpload';
 import { validateBotSettings } from './schemas/botSettings';
 
 function App() {
@@ -12,7 +13,15 @@ function App() {
   const [firstMessageText, setFirstMessageText] = useState('');
   const [inlineButtonText, setInlineButtonText] = useState('');
   const [inlineButtonResponse, setInlineButtonResponse] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
+
+  // Handler для изменения аватара
+  const handleAvatarChange = (url: string | null, file: File | null) => {
+    setAvatarUrl(url);
+    setAvatarFile(file);
+  };
 
   // Утилита для определения цвета счетчика символов
   const getCounterColor = (length: number, max: number) => {
@@ -123,6 +132,12 @@ function App() {
                   </span>
                 </div>
               </div>
+
+              {/* Avatar Upload */}
+              <AvatarUpload
+                avatarUrl={avatarUrl}
+                onAvatarChange={handleAvatarChange}
+              />
 
               {/* Short Description */}
               <div className="mb-6">
@@ -323,6 +338,8 @@ function App() {
                       setFirstMessageText('');
                       setInlineButtonText('');
                       setInlineButtonResponse('');
+                      setAvatarUrl(null);
+                      setAvatarFile(null);
                       setValidationErrors([]);
                     }
                   }}
@@ -342,6 +359,7 @@ function App() {
                   description={description}
                   about={about}
                   privacyPolicyUrl={privacyPolicyUrl}
+                  avatar={avatarUrl || undefined}
                   firstMessage={
                     firstMessageText
                       ? {

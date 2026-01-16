@@ -1,0 +1,295 @@
+import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
+
+interface AvatarUploadProps {
+  avatarUrl: string | null;
+  onAvatarChange: (avatarUrl: string | null, file: File | null) => void;
+}
+
+export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [imageInfo, setImageInfo] = useState<{
+    width: number;
+    height: number;
+    size: number;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Закрытие модального окна по ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showModal]);
+
+  // Валидация изображения
+  const validateImage = async (file: File): Promise<{ valid: boolean; error?: string }> => {
+    // Проверка типа файла
+    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+      return { valid: false, error: 'Допустимы только JPEG и PNG форматы' };
+    }
+
+    // Проверка размера файла (макс 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      return { valid: false, error: `Размер файла превышает 5MB (текущий: ${(file.size / 1024 / 1024).toFixed(2)}MB)` };
+    }
+
+    // Загружаем изображение для проверки разрешения
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const width = img.width;
+        const height = img.height;
+
+        // Проверка минимального разрешения
+        if (width < 640 || height < 640) {
+          resolve({ valid: false, error: `Минимальное разрешение 640x640px (текущее: ${width}x${height}px)` });
+          return;
+        }
+
+        // Проверка максимального разрешения
+        if (width > 4096 || height > 4096) {
+          resolve({ valid: false, error: `Максимальное разрешение 4096x4096px (текущее: ${width}x${height}px)` });
+          return;
+        }
+
+        // Проверка соотношения сторон (квадрат ±5%)
+        const aspectRatio = width / height;
+        if (aspectRatio < 0.95 || aspectRatio > 1.05) {
+          resolve({ valid: false, error: `Изображение должно быть квадратным (текущее: ${width}x${height}px)` });
+          return;
+        }
+
+        resolve({ valid: true });
+      };
+
+      img.onerror = () => {
+        resolve({ valid: false, error: 'Не удалось загрузить изображение' });
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Обработка выбора файла
+  const handleFile = async (file: File) => {
+    setError(null);
+
+    const validation = await validateImage(file);
+
+    if (!validation.valid) {
+      setError(validation.error || 'Ошибка валидации');
+      return;
+    }
+
+    // Создаем Data URL для preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+
+      // Получаем размеры изображения
+      const img = new Image();
+      img.onload = () => {
+        setImageInfo({
+          width: img.width,
+          height: img.height,
+          size: file.size
+        });
+        onAvatarChange(dataUrl, file);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Drag & Drop handlers
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFile(files[0]);
+    }
+  };
+
+  // Click to upload handler
+  const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFile(files[0]);
+    }
+  };
+
+  // Удаление аватара
+  const handleRemove = () => {
+    onAvatarChange(null, null);
+    setImageInfo(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Аватар бота (Avatar)
+      </label>
+
+      {/* Upload Zone */}
+      {!avatarUrl ? (
+        <div
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            ${isDragging
+              ? 'border-blue-500 bg-blue-50'
+              : error
+                ? 'border-red-300 bg-red-50'
+                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+            }
+          `}
+        >
+          <div className="text-5xl mb-3">📷</div>
+          <p className="text-sm font-medium text-gray-700 mb-1">
+            Перетащите изображение или нажмите для выбора
+          </p>
+          <p className="text-xs text-gray-500">
+            JPEG или PNG, до 5MB, минимум 640x640px, квадратное
+          </p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png"
+            onChange={handleFileInput}
+            className="hidden"
+          />
+        </div>
+      ) : (
+        /* Preview Zone */
+        <div className="border-2 border-gray-300 rounded-lg p-4">
+          <div className="flex items-start gap-4">
+            {/* Avatar Preview */}
+            <div
+              onClick={() => setShowModal(true)}
+              className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              title="Нажмите для просмотра в полном размере"
+            >
+              <img
+                src={avatarUrl}
+                alt="Avatar preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Info */}
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                ✓ Изображение загружено
+              </p>
+              {imageInfo && (
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p>Разрешение: {imageInfo.width}x{imageInfo.height}px</p>
+                  <p>Размер файла: {(imageInfo.size / 1024).toFixed(1)} KB</p>
+                </div>
+              )}
+              <button
+                onClick={() => setShowModal(true)}
+                className="text-xs text-blue-600 hover:underline mt-2"
+              >
+                🔍 Открыть в полном размере
+              </button>
+            </div>
+
+            {/* Remove Button */}
+            <button
+              onClick={handleRemove}
+              className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+            >
+              🗑️ Удалить
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">⚠️ {error}</p>
+        </div>
+      )}
+
+      {/* Helper Text */}
+      <div className="mt-2">
+        <p className="text-xs text-gray-500">
+          Аватар отображается во всех preview компонентах. В @BotFather используйте команду <code className="bg-gray-100 px-1 rounded">/setuserpic</code>
+        </p>
+      </div>
+
+      {/* Modal для полноразмерного просмотра */}
+      {showModal && avatarUrl && (
+        <div
+          onClick={() => setShowModal(false)}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          style={{ backdropFilter: 'blur(4px)' }}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+            {/* Close button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute -top-12 right-0 text-white text-2xl hover:text-gray-300 transition-colors bg-black/50 w-10 h-10 rounded-full"
+              title="Закрыть (ESC)"
+            >
+              ×
+            </button>
+
+            {/* Image */}
+            <img
+              src={avatarUrl}
+              alt="Avatar full size"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Image info */}
+            {imageInfo && (
+              <div className="mt-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
+                {imageInfo.width}x{imageInfo.height}px · {(imageInfo.size / 1024).toFixed(1)} KB
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

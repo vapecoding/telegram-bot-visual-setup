@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface BotProfileProps {
   botName: string;
   about: string;
@@ -6,6 +8,50 @@ interface BotProfileProps {
 }
 
 export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProfileProps) {
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
+
+  const handleAvatarClick = () => {
+    if (avatar) {
+      setIsAvatarExpanded(!isAvatarExpanded);
+    }
+  };
+
+  // Если аватар увеличен - показываем полноэкранный вид
+  if (isAvatarExpanded && avatar) {
+    return (
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
+        {/* Header with back button */}
+        <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3">
+          <button className="text-xl">←</button>
+          <span className="font-medium">Photo</span>
+          <div className="ml-auto flex gap-3">
+            <button className="text-lg">↓</button>
+            <button className="text-lg">⋮</button>
+          </div>
+        </div>
+
+        {/* Full-size avatar */}
+        <div
+          onClick={handleAvatarClick}
+          className="flex-1 bg-black flex items-center justify-center cursor-pointer p-4"
+        >
+          <img
+            src={avatar}
+            alt={botName}
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+
+        {/* Bottom hint */}
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
+          <p className="text-xs text-gray-700 text-center">
+            👆 Нажмите на изображение, чтобы вернуться к профилю
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm">
       {/* Header with back button */}
@@ -21,7 +67,13 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
       {/* Profile Header */}
       <div className="bg-[#5288c1] px-4 pb-6 pt-4 text-center">
         {/* Avatar */}
-        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden">
+        <div
+          onClick={handleAvatarClick}
+          className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden ${
+            avatar ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+          }`}
+          title={avatar ? 'Нажмите для просмотра в полном размере' : ''}
+        >
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
           ) : (
@@ -112,6 +164,7 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
       <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
         <p className="text-xs text-gray-700">
           ℹ️ About отображается в профиле бота, Privacy Policy - как ссылка
+          {avatar && ' · Нажмите на аватар для просмотра'}
         </p>
       </div>
     </div>

@@ -6,6 +6,9 @@ import { z } from 'zod';
  * - Финальной валидации перед экспортом ZIP
  * - Проверки черновика при загрузке из IndexedDB
  * - Type-safety через z.infer<typeof botSettingsSchema>
+ *
+ * Примечание: Avatar (File) валидируется отдельно в компоненте AvatarUpload
+ * и не включен в эту схему, так как File объекты не сериализуются в JSON.
  */
 
 export const botSettingsSchema = z.object({
