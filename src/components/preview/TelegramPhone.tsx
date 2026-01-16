@@ -11,6 +11,7 @@ interface TelegramPhoneProps {
   about: string;
   privacyPolicyUrl?: string;
   avatar?: string;
+  botPic?: string;
   firstMessage?: {
     text: string;
     inlineButton?: {
@@ -29,6 +30,7 @@ export function TelegramPhone({
   about,
   privacyPolicyUrl,
   avatar,
+  botPic,
   firstMessage
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
@@ -112,6 +114,7 @@ export function TelegramPhone({
               botName={botName}
               description={description}
               avatar={avatar}
+              botPic={botPic}
             />
           )}
 

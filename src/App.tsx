@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
+import { BotPicUpload } from './components/BotPicUpload';
 import { validateBotSettings } from './schemas/botSettings';
 
 function App() {
@@ -15,12 +16,20 @@ function App() {
   const [inlineButtonResponse, setInlineButtonResponse] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [botPicUrl, setBotPicUrl] = useState<string | null>(null);
+  const [botPicFile, setBotPicFile] = useState<File | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
 
   // Handler для изменения аватара
   const handleAvatarChange = (url: string | null, file: File | null) => {
     setAvatarUrl(url);
     setAvatarFile(file);
+  };
+
+  // Handler для изменения BotPic
+  const handleBotPicChange = (url: string | null, file: File | null) => {
+    setBotPicUrl(url);
+    setBotPicFile(file);
   };
 
   // Утилита для определения цвета счетчика символов
@@ -137,6 +146,12 @@ function App() {
               <AvatarUpload
                 avatarUrl={avatarUrl}
                 onAvatarChange={handleAvatarChange}
+              />
+
+              {/* BotPic Upload */}
+              <BotPicUpload
+                botPicUrl={botPicUrl}
+                onBotPicChange={handleBotPicChange}
               />
 
               {/* Short Description */}
@@ -340,6 +355,8 @@ function App() {
                       setInlineButtonResponse('');
                       setAvatarUrl(null);
                       setAvatarFile(null);
+                      setBotPicUrl(null);
+                      setBotPicFile(null);
                       setValidationErrors([]);
                     }
                   }}
@@ -360,6 +377,7 @@ function App() {
                   about={about}
                   privacyPolicyUrl={privacyPolicyUrl}
                   avatar={avatarUrl || undefined}
+                  botPic={botPicUrl || undefined}
                   firstMessage={
                     firstMessageText
                       ? {

@@ -2,9 +2,10 @@ interface ChatStartProps {
   botName: string;
   description: string;
   avatar?: string;
+  botPic?: string;
 }
 
-export function ChatStart({ botName, description, avatar }: ChatStartProps) {
+export function ChatStart({ botName, description, avatar, botPic }: ChatStartProps) {
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm">
       {/* Chat Header */}
@@ -40,6 +41,19 @@ export function ChatStart({ botName, description, avatar }: ChatStartProps) {
           `
         }}
       >
+        {/* BotPic (приветственная картинка) */}
+        {botPic && (
+          <div className="max-w-sm mx-auto mb-4">
+            <div className="relative rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16 / 9' }}>
+              <img
+                src={botPic}
+                alt="Bot description picture"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Welcome Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 max-w-sm mx-auto mb-4">
           {/* Bot Avatar in card */}
@@ -76,6 +90,7 @@ export function ChatStart({ botName, description, avatar }: ChatStartProps) {
       <div className="px-4 py-2 bg-green-50 border-t border-green-200">
         <p className="text-xs text-gray-700">
           ℹ️ Description отображается на стартовом экране ДО нажатия START
+          {botPic && ' · BotPic показывается над Welcome Card'}
         </p>
       </div>
     </div>
