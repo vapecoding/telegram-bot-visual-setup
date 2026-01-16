@@ -78,13 +78,6 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           </div>
         </div>
       </div>
-
-      {/* Bottom hint */}
-      <div className="px-4 py-2 bg-yellow-50 border-t border-yellow-200">
-        <p className="text-xs text-gray-700">
-          ℹ️ Short Description отображается как превью последнего сообщения в списке контактов
-        </p>
-      </div>
     </div>
   );
 }

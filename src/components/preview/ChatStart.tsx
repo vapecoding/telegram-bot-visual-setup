@@ -7,7 +7,7 @@ interface ChatStartProps {
 
 export function ChatStart({ botName, description, avatar, botPic }: ChatStartProps) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
       {/* Chat Header */}
       <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3">
         <button className="text-xl">←</button>
@@ -25,20 +25,14 @@ export function ChatStart({ botName, description, avatar, botPic }: ChatStartPro
         <button className="text-lg">⋮</button>
       </div>
 
-      {/* Chat Background */}
+      {/* Chat Background - Telegram default pattern */}
       <div
-        className="min-h-[600px] p-4 relative"
+        className="flex-1 p-4 relative overflow-auto"
         style={{
-          background: 'linear-gradient(135deg, #e8f5e9 0%, #fff9c4 100%)',
-          backgroundImage: `
-            repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(255,255,255,.03) 10px,
-              rgba(255,255,255,.03) 20px
-            )
-          `
+          backgroundImage: 'url(/telegram-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
         }}
       >
         {/* BotPic (приветственная картинка) */}
@@ -56,16 +50,18 @@ export function ChatStart({ botName, description, avatar, botPic }: ChatStartPro
 
         {/* Welcome Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 max-w-sm mx-auto mb-4">
-          {/* Bot Avatar in card */}
-          <div className="flex justify-center mb-3">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden">
-              {avatar ? (
-                <img src={avatar} alt={botName} className="w-full h-full object-cover" />
-              ) : (
-                botName.charAt(0).toUpperCase() || 'B'
-              )}
+          {/* Bot Avatar in card - скрываем если есть BotPic */}
+          {!botPic && (
+            <div className="flex justify-center mb-3">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden">
+                {avatar ? (
+                  <img src={avatar} alt={botName} className="w-full h-full object-cover" />
+                ) : (
+                  botName.charAt(0).toUpperCase() || 'B'
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* "What can this bot do?" */}
           <h3 className="text-center font-semibold text-gray-900 mb-3">
@@ -84,14 +80,6 @@ export function ChatStart({ botName, description, avatar, botPic }: ChatStartPro
             START
           </button>
         </div>
-      </div>
-
-      {/* Bottom hint */}
-      <div className="px-4 py-2 bg-green-50 border-t border-green-200">
-        <p className="text-xs text-gray-700">
-          ℹ️ Description отображается на стартовом экране ДО нажатия START
-          {botPic && ' · BotPic показывается над Welcome Card'}
-        </p>
       </div>
     </div>
   );

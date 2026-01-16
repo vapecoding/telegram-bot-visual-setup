@@ -41,13 +41,6 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
             className="max-w-full max-h-full object-contain"
           />
         </div>
-
-        {/* Bottom hint */}
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-          <p className="text-xs text-gray-700 text-center">
-            👆 Нажмите на изображение, чтобы вернуться к профилю
-          </p>
-        </div>
       </div>
     );
   }
@@ -157,14 +150,6 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
         </button>
         <p className="text-xs text-gray-500 mt-2 px-9">
           This bot is able to manage a group or channel.
-        </p>
-      </div>
-
-      {/* Bottom hint */}
-      <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
-        <p className="text-xs text-gray-700">
-          ℹ️ About отображается в профиле бота, Privacy Policy - как ссылка
-          {avatar && ' · Нажмите на аватар для просмотра'}
         </p>
       </div>
     </div>

@@ -10,7 +10,7 @@ interface FirstMessageProps {
 
 export function FirstMessage({ botName, text, inlineButton, avatar }: FirstMessageProps) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
       {/* Chat Header */}
       <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3">
         <button className="text-xl">←</button>
@@ -28,20 +28,14 @@ export function FirstMessage({ botName, text, inlineButton, avatar }: FirstMessa
         <button className="text-lg">⋮</button>
       </div>
 
-      {/* Chat Background */}
+      {/* Chat Background - Telegram default pattern */}
       <div
-        className="min-h-[600px] p-4 relative"
+        className="flex-1 p-4 relative overflow-auto"
         style={{
-          background: 'linear-gradient(135deg, #e8f5e9 0%, #fff9c4 100%)',
-          backgroundImage: `
-            repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(255,255,255,.03) 10px,
-              rgba(255,255,255,.03) 20px
-            )
-          `
+          backgroundImage: 'url(/telegram-bg.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
         }}
       >
         {/* First Message from Bot */}
@@ -75,13 +69,6 @@ export function FirstMessage({ botName, text, inlineButton, avatar }: FirstMessa
             </p>
           </div>
         )}
-      </div>
-
-      {/* Bottom hint */}
-      <div className="px-4 py-2 bg-purple-50 border-t border-purple-200">
-        <p className="text-xs text-gray-700">
-          ℹ️ First Message - сообщение бота ПОСЛЕ нажатия START
-        </p>
       </div>
     </div>
   );
