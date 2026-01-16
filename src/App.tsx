@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
 import { BotPicUpload } from './components/BotPicUpload';
 import { validateBotSettings } from './schemas/botSettings';
+import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 
 function App() {
   const [botName, setBotName] = useState('');
@@ -19,6 +20,99 @@ function App() {
   const [botPicUrl, setBotPicUrl] = useState<string | null>(null);
   const [botPicFile, setBotPicFile] = useState<File | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
+
+  // IndexedDB состояния
+  const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
+  const [isIDBSupported] = useState(isIndexedDBSupported());
+  const saveTimeoutRef = useRef<number | null>(null);
+
+  // Восстановление черновика при загрузке
+  useEffect(() => {
+    async function hydrate() {
+      if (!isIDBSupported) {
+        setIsHydrating(false);
+        return;
+      }
+
+      try {
+        const draft = await loadDraft();
+        if (draft) {
+          setBotName(draft.botName);
+          setShortDescription(draft.shortDescription);
+          setDescription(draft.description);
+          setAbout(draft.about);
+          setPrivacyPolicyUrl(draft.privacyPolicyUrl);
+          setFirstMessageText(draft.firstMessageText);
+          setInlineButtonText(draft.inlineButtonText);
+          setInlineButtonResponse(draft.inlineButtonResponse);
+          setAvatarUrl(draft.avatarUrl);
+          setBotPicUrl(draft.botPicUrl);
+
+          console.log('Draft restored from IndexedDB');
+        }
+      } catch (error) {
+        console.error('Failed to restore draft:', error);
+      } finally {
+        setIsHydrating(false);
+      }
+    }
+
+    hydrate();
+  }, [isIDBSupported]);
+
+  // Автосохранение черновика (debounced, 2 секунды)
+  useEffect(() => {
+    // Не сохраняем во время гидратации
+    if (isHydrating || !isIDBSupported) {
+      return;
+    }
+
+    // Очищаем предыдущий таймер
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Устанавливаем новый таймер
+    saveTimeoutRef.current = window.setTimeout(() => {
+      const draft = {
+        botName,
+        shortDescription,
+        description,
+        about,
+        privacyPolicyUrl,
+        firstMessageText,
+        inlineButtonText,
+        inlineButtonResponse,
+        avatarUrl,
+        botPicUrl,
+        savedAt: Date.now()
+      };
+
+      saveDraft(draft).catch((error) => {
+        console.error('Failed to save draft:', error);
+      });
+    }, 2000);
+
+    // Cleanup
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [
+    botName,
+    shortDescription,
+    description,
+    about,
+    privacyPolicyUrl,
+    firstMessageText,
+    inlineButtonText,
+    inlineButtonResponse,
+    avatarUrl,
+    botPicUrl,
+    isHydrating,
+    isIDBSupported
+  ]);
 
   // Handler для изменения аватара
   const handleAvatarChange = (url: string | null, file: File | null) => {
@@ -343,7 +437,7 @@ function App() {
                   📦 Скачать архив
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm('Очистить все поля формы?')) {
                       setBotName('');
                       setShortDescription('');
@@ -358,6 +452,16 @@ function App() {
                       setBotPicUrl(null);
                       setBotPicFile(null);
                       setValidationErrors([]);
+
+                      // Удаляем черновик из IndexedDB
+                      if (isIDBSupported) {
+                        try {
+                          await clearDraft();
+                          console.log('Draft cleared from IndexedDB');
+                        } catch (error) {
+                          console.error('Failed to clear draft:', error);
+                        }
+                      }
                     }
                   }}
                   className="px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-colors"
