@@ -5,6 +5,7 @@ import { ChatStart } from './ChatStart';
 import { FirstMessage } from './FirstMessage';
 
 interface TelegramPhoneProps {
+  username: string;
   botName: string;
   shortDescription: string;
   description: string;
@@ -21,9 +22,10 @@ interface TelegramPhoneProps {
   };
 }
 
-type PreviewMode = 'chatlist' | 'profile' | 'chatstart' | 'firstmessage';
+type PreviewMode = 'chatlist' | 'profile' | 'dialog';
 
 export function TelegramPhone({
+  username,
   botName,
   shortDescription,
   description,
@@ -34,106 +36,108 @@ export function TelegramPhone({
   firstMessage
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
+  const [dialogStarted, setDialogStarted] = useState(false);
+
+  // Сброс состояния диалога при смене режима
+  const handleModeChange = (newMode: PreviewMode) => {
+    setMode(newMode);
+    if (newMode === 'dialog') {
+      setDialogStarted(false);
+    }
+  };
+
+  const handleStartClick = () => {
+    setDialogStarted(true);
+  };
 
   return (
-    <div>
-      {/* Mode Switcher */}
-      <div className="flex gap-2 mb-4">
+    <div className="flex gap-4 items-start">
+      {/* Vertical Mode Switcher - Left Side */}
+      <div className="flex flex-col gap-3 pt-4">
         <button
-          onClick={() => setMode('chatlist')}
-          className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors whitespace-nowrap ${
+          onClick={() => handleModeChange('chatlist')}
+          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
             mode === 'chatlist'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
           }`}
         >
-          📋 Chat List
+          📋 Список чатов
         </button>
         <button
-          onClick={() => setMode('profile')}
-          className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors whitespace-nowrap ${
+          onClick={() => handleModeChange('profile')}
+          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
             mode === 'profile'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
           }`}
         >
-          👤 Profile
+          👤 Профиль
         </button>
         <button
-          onClick={() => setMode('chatstart')}
-          className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors whitespace-nowrap ${
-            mode === 'chatstart'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
+          onClick={() => handleModeChange('dialog')}
+          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
+            mode === 'dialog'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
           }`}
         >
-          💬 Chat Start
-        </button>
-        <button
-          onClick={() => setMode('firstmessage')}
-          className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors whitespace-nowrap ${
-            mode === 'firstmessage'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          ✉️ First Message
+          💬 Диалог
         </button>
       </div>
 
-      {/* Phone Frame */}
-      <div className="flex justify-center">
+      {/* Phone Frame - Right Side */}
+      <div className="flex-1 flex justify-center pl-16">
         <div
-          className="bg-gray-900 rounded-[3rem] p-4 shadow-2xl"
+          className="bg-gray-900 rounded-[3rem] p-4 shadow-2xl overflow-hidden flex-shrink-0"
           style={{
-            height: 'min(900px, calc(100vh - 10rem))',
-            aspectRatio: '9 / 19.5'
+            height: 'min(900px, calc(100vh - 8rem))',
+            width: 'calc(min(900px, calc(100vh - 8rem)) * 10 / 19.5)'
           }}
         >
-          <div className="bg-white rounded-[2.5rem] overflow-hidden h-full">
+          <div className="bg-white rounded-[2.5rem] overflow-hidden h-full w-full">
             {/* Content */}
-          {mode === 'chatlist' && (
-            <ChatListItem
-              botName={botName}
-              shortDescription={shortDescription}
-              avatar={avatar}
-            />
-          )}
+            {mode === 'chatlist' && (
+              <ChatListItem
+                botName={botName}
+                shortDescription={shortDescription}
+                avatar={avatar}
+              />
+            )}
 
-          {mode === 'profile' && (
-            <BotProfile
-              botName={botName}
-              about={about}
-              privacyPolicyUrl={privacyPolicyUrl}
-              avatar={avatar}
-            />
-          )}
+            {mode === 'profile' && (
+              <BotProfile
+                username={username}
+                botName={botName}
+                about={about}
+                privacyPolicyUrl={privacyPolicyUrl}
+                avatar={avatar}
+              />
+            )}
 
-          {mode === 'chatstart' && (
-            <ChatStart
-              botName={botName}
-              description={description}
-              avatar={avatar}
-              botPic={botPic}
-            />
-          )}
+            {mode === 'dialog' && !dialogStarted && (
+              <ChatStart
+                botName={botName}
+                description={description}
+                avatar={avatar}
+                botPic={botPic}
+                onStartClick={handleStartClick}
+              />
+            )}
 
-          {mode === 'firstmessage' && (
-            <FirstMessage
-              botName={botName}
-              text={firstMessage?.text || ''}
-              inlineButton={firstMessage?.inlineButton}
-              avatar={avatar}
-            />
-          )}
+            {mode === 'dialog' && dialogStarted && (
+              <FirstMessage
+                botName={botName}
+                description={description}
+                text={firstMessage?.text || ''}
+                inlineButton={firstMessage?.inlineButton}
+                avatar={avatar}
+                botPic={botPic}
+              />
+            )}
           </div>
         </div>
       </div>
-
-      {/* Hint */}
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        ⚠️ Схематичное отображение. Реальные шрифты и отступы зависят от устройства пользователя (iOS/Android).
-      </p>
     </div>
   );
 }

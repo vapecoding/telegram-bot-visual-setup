@@ -157,9 +157,14 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
 
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Аватар бота (Avatar)
-      </label>
+      <div className="mb-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Profile Photo (Аватар бота)
+        </label>
+        <p className="text-xs text-gray-500 mt-1">
+          Круглая аватарка в профиле бота, списке чатов и заголовках сообщений
+        </p>
+      </div>
 
       {/* Upload Zone */}
       {!avatarUrl ? (
@@ -249,12 +254,6 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
         </div>
       )}
 
-      {/* Helper Text */}
-      <div className="mt-2">
-        <p className="text-xs text-gray-500">
-          Аватар отображается во всех preview компонентах. В @BotFather используйте команду <code className="bg-gray-100 px-1 rounded">/setuserpic</code>
-        </p>
-      </div>
 
       {/* Modal для полноразмерного просмотра */}
       {showModal && avatarUrl && (

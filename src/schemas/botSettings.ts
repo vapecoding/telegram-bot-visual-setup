@@ -7,12 +7,19 @@ import { z } from 'zod';
  * - Проверки черновика при загрузке из IndexedDB
  * - Type-safety через z.infer<typeof botSettingsSchema>
  *
- * Примечание: Avatar и BotPic (File) валидируются отдельно в компонентах
- * AvatarUpload и BotPicUpload и не включены в эту схему, так как File объекты
- * не сериализуются в JSON.
+ * Примечание: Profile Photo и Description Picture (File) валидируются отдельно
+ * в компонентах AvatarUpload и BotPicUpload и не включены в эту схему,
+ * так как File объекты не сериализуются в JSON.
  */
 
 export const botSettingsSchema = z.object({
+  // Username бота (уникальный идентификатор)
+  // Требования Telegram: 5-32 символа, латиница/цифры/_, заканчивается на "bot"
+  username: z.string()
+    .min(5, "Username должен содержать минимум 5 символов")
+    .max(32, "Username не может быть длиннее 32 символов")
+    .regex(/^[a-z][a-z0-9_]*bot$/i, "Username должен начинаться с буквы, содержать только латиницу/цифры/_ и заканчиваться на 'bot'"),
+
   // Имя бота (Display Name) - отображаемое имя бота в Telegram
   // BotFather: /setname
   // Может содержать любые символы (кириллица, эмодзи, пробелы и т.д.)

@@ -6,9 +6,9 @@ interface ChatListItemProps {
 
 export function ChatListItem({ botName, shortDescription, avatar }: ChatListItemProps) {
   return (
-    <div className="bg-white">
-      {/* Telegram Header */}
-      <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center justify-between">
+    <div className="bg-white h-full overflow-hidden">
+      {/* Telegram Header - не редактируемый */}
+      <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center justify-between opacity-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-xs">
             ☰
@@ -20,12 +20,12 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-[#5288c1] px-4 pb-2 flex gap-4 text-white text-sm">
-        <span className="opacity-60">All</span>
-        <span className="opacity-60">Unread</span>
-        <span className="border-b-2 border-white pb-1">Contacts</span>
-        <span className="opacity-60">Groups</span>
+      {/* Tabs - не редактируемые */}
+      <div className="bg-[#5288c1] px-4 pb-2 flex gap-4 text-white text-sm opacity-50">
+        <span className="opacity-60">Все</span>
+        <span className="opacity-60">Непрочит.</span>
+        <span className="border-b-2 border-white pb-1">Контакты</span>
+        <span className="opacity-60">Группы</span>
       </div>
 
       {/* Chat List */}
@@ -45,12 +45,12 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3 overflow-hidden">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-semibold text-gray-900 truncate flex-1 min-w-0">
-                {botName || 'Bot Name'}
+                {botName || 'Имя бота'}
               </h3>
               <span className="text-xs text-gray-500 ml-2 flex-shrink-0">12:34</span>
             </div>
             <p className="text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap">
-              {shortDescription || 'Short description appears here...'}
+              {shortDescription || 'Краткое описание бота...'}
             </p>
           </div>
         </div>
@@ -60,10 +60,10 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0"></div>
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3">
             <div className="flex items-start justify-between mb-1">
-              <h3 className="font-semibold text-gray-900">Another Chat</h3>
-              <span className="text-xs text-gray-500">Yesterday</span>
+              <h3 className="font-semibold text-gray-900">Другой чат</h3>
+              <span className="text-xs text-gray-500">Вчера</span>
             </div>
-            <p className="text-sm text-gray-600 truncate">Last message preview...</p>
+            <p className="text-sm text-gray-600 truncate">Последнее сообщение...</p>
           </div>
         </div>
 
@@ -71,10 +71,10 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0"></div>
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3">
             <div className="flex items-start justify-between mb-1">
-              <h3 className="font-semibold text-gray-900">Group Chat</h3>
-              <span className="text-xs text-gray-500">Monday</span>
+              <h3 className="font-semibold text-gray-900">Групповой чат</h3>
+              <span className="text-xs text-gray-500">Пн</span>
             </div>
-            <p className="text-sm text-gray-600 truncate">Someone: Message text...</p>
+            <p className="text-sm text-gray-600 truncate">Кто-то: Текст сообщения...</p>
           </div>
         </div>
       </div>

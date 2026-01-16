@@ -1,13 +1,14 @@
 import { useState } from 'react';
 
 interface BotProfileProps {
+  username: string;
   botName: string;
   about: string;
   privacyPolicyUrl?: string;
   avatar?: string;
 }
 
-export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProfileProps) {
+export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   const handleAvatarClick = () => {
@@ -23,7 +24,7 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
         {/* Header with back button */}
         <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3">
           <button className="text-xl">←</button>
-          <span className="font-medium">Photo</span>
+          <span className="font-medium">Фото</span>
           <div className="ml-auto flex gap-3">
             <button className="text-lg">↓</button>
             <button className="text-lg">⋮</button>
@@ -46,19 +47,19 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
   }
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full">
       {/* Header with back button */}
-      <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3">
-        <button className="text-xl">←</button>
-        <span className="font-medium">Info</span>
-        <div className="ml-auto flex gap-3">
+      <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3 overflow-hidden">
+        <button className="text-xl opacity-40">←</button>
+        <span className="font-medium opacity-40">Инфо</span>
+        <div className="ml-auto flex gap-3 opacity-40">
           <button className="text-lg">✎</button>
           <button className="text-lg">⋮</button>
         </div>
       </div>
 
       {/* Profile Header */}
-      <div className="bg-[#5288c1] px-4 pb-6 pt-4 text-center">
+      <div className="bg-[#5288c1] px-4 pb-6 pt-4 text-center overflow-hidden">
         {/* Avatar */}
         <div
           onClick={handleAvatarClick}
@@ -75,37 +76,37 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
         </div>
 
         {/* Bot Name */}
-        <h2 className="text-white text-xl font-semibold mb-1">
-          {botName || 'Bot Name'}
+        <h2 className="text-white text-xl font-semibold mb-1 truncate px-2">
+          {botName || 'Имя бота'}
         </h2>
-        <p className="text-white/80 text-sm">bot</p>
+        <p className="text-white/80 text-sm">бот</p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex border-b border-gray-200">
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 hover:bg-gray-50">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+      {/* Action Buttons - не редактируемые */}
+      <div className="flex border-b border-gray-200 opacity-40">
+        <button className="flex-1 py-4 flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
             💬
           </div>
-          <span className="text-xs text-gray-700">Message</span>
+          <span className="text-xs text-gray-500">Написать</span>
         </button>
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 hover:bg-gray-50">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+        <button className="flex-1 py-4 flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
             🔕
           </div>
-          <span className="text-xs text-gray-700">Unmute</span>
+          <span className="text-xs text-gray-500">Вкл. звук</span>
         </button>
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 hover:bg-gray-50">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+        <button className="flex-1 py-4 flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
             ↗
           </div>
-          <span className="text-xs text-gray-700">Share</span>
+          <span className="text-xs text-gray-500">Поделиться</span>
         </button>
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 hover:bg-gray-50">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+        <button className="flex-1 py-4 flex flex-col items-center gap-1">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
             ⊝
           </div>
-          <span className="text-xs text-gray-700">Stop</span>
+          <span className="text-xs text-gray-500">Стоп</span>
         </button>
       </div>
 
@@ -114,17 +115,17 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
         <p className="text-gray-900 whitespace-pre-wrap break-words">
           {about || 'Текст "О боте" отображается здесь. Максимум 120 символов.'}
         </p>
-        <p className="text-xs text-gray-500 mt-1">About</p>
+        <p className="text-xs text-gray-500 mt-1">О боте</p>
       </div>
 
       {/* Username */}
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div>
-          <p className="text-gray-900">@{botName?.toLowerCase().replace(/\s+/g, '_') || 'botname'}</p>
+          <p className="text-blue-600">@{username || 'username_bot'}</p>
           <p className="text-xs text-gray-500 mt-1">Username</p>
         </div>
-        <button className="w-6 h-6 flex items-center justify-center">
-          <span className="text-blue-500">⋮⋮</span>
+        <button className="w-6 h-6 flex items-center justify-center opacity-40">
+          <span className="text-gray-400">⋮⋮</span>
         </button>
       </div>
 
@@ -137,19 +138,19 @@ export function BotProfile({ botName, about, privacyPolicyUrl, avatar }: BotProf
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline text-sm"
           >
-            Privacy Policy
+            Политика конфиденциальности
           </a>
         </div>
       )}
 
-      {/* Additional Info */}
-      <div className="px-4 py-3">
-        <button className="w-full text-left py-2 flex items-center gap-3 hover:bg-gray-50">
-          <span className="text-gray-600">👥</span>
-          <span className="text-gray-900">Add to Group or Channel</span>
+      {/* Additional Info - не редактируемое */}
+      <div className="px-4 py-3 opacity-40">
+        <button className="w-full text-left py-2 flex items-center gap-3">
+          <span className="text-gray-400">👥</span>
+          <span className="text-gray-500">Добавить в группу или канал</span>
         </button>
-        <p className="text-xs text-gray-500 mt-2 px-9">
-          This bot is able to manage a group or channel.
+        <p className="text-xs text-gray-400 mt-2 px-9">
+          Этот бот может управлять группой или каналом.
         </p>
       </div>
     </div>

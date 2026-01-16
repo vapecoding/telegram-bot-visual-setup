@@ -7,6 +7,7 @@ import { validateBotSettings } from './schemas/botSettings';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 
 function App() {
+  const [username, setUsername] = useState('');
   const [botName, setBotName] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
@@ -37,6 +38,7 @@ function App() {
       try {
         const draft = await loadDraft();
         if (draft) {
+          setUsername(draft.username || '');
           setBotName(draft.botName);
           setShortDescription(draft.shortDescription);
           setDescription(draft.description);
@@ -75,6 +77,7 @@ function App() {
     // Устанавливаем новый таймер
     saveTimeoutRef.current = window.setTimeout(() => {
       const draft = {
+        username,
         botName,
         shortDescription,
         description,
@@ -100,6 +103,7 @@ function App() {
       }
     };
   }, [
+    username,
     botName,
     shortDescription,
     description,
@@ -120,7 +124,7 @@ function App() {
     setAvatarFile(file);
   };
 
-  // Handler для изменения BotPic
+  // Handler для изменения Description Picture
   const handleBotPicChange = (url: string | null, file: File | null) => {
     setBotPicUrl(url);
     setBotPicFile(file);
@@ -143,6 +147,7 @@ function App() {
   const handleExport = () => {
     // Собираем данные из формы
     const formData = {
+      username,
       botName,
       shortDescription,
       description,
@@ -179,19 +184,19 @@ function App() {
 
       <div className="min-h-screen bg-gray-50 hidden lg:block">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+        <header className="bg-white border-b border-gray-200 px-8 py-3 flex items-center gap-4">
+          <h1 className="text-xl font-bold text-gray-900">
             Telegram Bot Settings Viewer
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Заполните настройки бота и проверьте как они будут выглядеть в Telegram
-          </p>
+          <span className="text-sm text-gray-500">
+            — заполните настройки и проверьте превью
+          </span>
         </header>
 
         {/* Main Layout: Two Columns */}
         <div className="flex">
           {/* Left Column: Form */}
-          <div className="w-1/2 p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 88px)' }}>
+          <div className="w-1/2 p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
             <div className="max-w-xl">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Настройки бота
@@ -212,6 +217,40 @@ function App() {
                   </ul>
                 </div>
               )}
+
+              {/* Username */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Username бота
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => {
+                      // Автоматически приводим к lowercase и убираем недопустимые символы
+                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                      setUsername(value);
+                    }}
+                    placeholder="my_helper_bot"
+                    maxLength={32}
+                    className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
+                      username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
+                        ? 'border-yellow-500 focus:ring-yellow-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">
+                    5-32 символа, латиница/цифры/_, должен заканчиваться на "bot"
+                  </p>
+                  <span className={`text-xs ${getCounterColor(username.length, 32)}`}>
+                    {username.length} / 32
+                  </span>
+                </div>
+              </div>
 
               {/* Bot Name */}
               <div className="mb-6">
@@ -242,7 +281,7 @@ function App() {
                 onAvatarChange={handleAvatarChange}
               />
 
-              {/* BotPic Upload */}
+              {/* Description Picture Upload */}
               <BotPicUpload
                 botPicUrl={botPicUrl}
                 onBotPicChange={handleBotPicChange}
@@ -439,6 +478,7 @@ function App() {
                 <button
                   onClick={async () => {
                     if (confirm('Очистить все поля формы?')) {
+                      setUsername('');
                       setBotName('');
                       setShortDescription('');
                       setDescription('');
@@ -475,6 +515,7 @@ function App() {
           {/* Right Column: Preview */}
           <div className="w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 border-l border-gray-200">
             <TelegramPhone
+                  username={username}
                   botName={botName}
                   shortDescription={shortDescription}
                   description={description}

@@ -17,7 +17,7 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
 
   // Валидация изображения
   const validateImage = async (file: File): Promise<{ valid: boolean; error?: string }> => {
-    // Проверка типа файла
+    // Проверка типа файла (только JPEG/PNG)
     if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
       return { valid: false, error: 'Допустимы только JPEG и PNG форматы' };
     }
@@ -35,17 +35,12 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
         const width = img.width;
         const height = img.height;
 
-        // Проверка точного разрешения 640x360
+        // Строго 640x360px
         if (width !== 640 || height !== 360) {
-          resolve({ valid: false, error: `Требуется разрешение 640x360px (текущее: ${width}x${height}px)` });
-          return;
-        }
-
-        // Дополнительная проверка соотношения сторон 16:9
-        const aspectRatio = width / height;
-        const expected = 16 / 9;
-        if (Math.abs(aspectRatio - expected) > 0.01) {
-          resolve({ valid: false, error: `Соотношение сторон должно быть 16:9 (текущее: ${aspectRatio.toFixed(2)})` });
+          resolve({
+            valid: false,
+            error: `Изображение должно быть 640x360px (текущее: ${width}x${height}px)`
+          });
           return;
         }
 
@@ -140,9 +135,14 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
 
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Приветственная картинка (Bot Description Picture)
-      </label>
+      <div className="mb-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Description Picture (Приветственная картинка)
+        </label>
+        <p className="text-xs text-gray-500 mt-1">
+          Отображается на стартовом экране над текстом «Что умеет этот бот?»
+        </p>
+      </div>
 
       {/* Upload Zone */}
       {!botPicUrl ? (
@@ -167,7 +167,7 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
             Перетащите изображение или нажмите для выбора
           </p>
           <p className="text-xs text-gray-500">
-            JPEG или PNG, до 5MB, ровно 640x360px (16:9)
+            JPEG или PNG, строго 640x360px, до 5MB
           </p>
 
           <input
@@ -225,12 +225,6 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
         </div>
       )}
 
-      {/* Helper Text */}
-      <div className="mt-2">
-        <p className="text-xs text-gray-500">
-          BotPic отображается на стартовом экране. В @BotFather используйте команду <code className="bg-gray-100 px-1 rounded">/setdescriptionpicture</code>
-        </p>
-      </div>
     </div>
   );
 }
