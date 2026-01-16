@@ -21,6 +21,7 @@ function App() {
   const [botPicUrl, setBotPicUrl] = useState<string | null>(null);
   const [botPicFile, setBotPicFile] = useState<File | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
@@ -233,6 +234,8 @@ function App() {
                       const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                       setUsername(value);
                     }}
+                    onFocus={() => setFocusedField('username')}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="my_helper_bot"
                     maxLength={32}
                     className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
@@ -261,6 +264,8 @@ function App() {
                   type="text"
                   value={botName}
                   onChange={(e) => setBotName(e.target.value)}
+                  onFocus={() => setFocusedField('botName')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Мой Помощник"
                   maxLength={64}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
@@ -306,6 +311,8 @@ function App() {
                   type="text"
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
+                  onFocus={() => setFocusedField('shortDescription')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Ваш цифровой помощник на выставке"
                   maxLength={120}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
@@ -328,6 +335,8 @@ function App() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  onFocus={() => setFocusedField('description')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Здравствуйте! Я ваш цифровой помощник на форум-выставке..."
                   maxLength={512}
                   rows={6}
@@ -352,6 +361,8 @@ function App() {
                   type="text"
                   value={about}
                   onChange={(e) => setAbout(e.target.value)}
+                  onFocus={() => setFocusedField('about')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Цифровой помощник выставки"
                   maxLength={120}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
@@ -375,6 +386,8 @@ function App() {
                   type="url"
                   value={privacyPolicyUrl}
                   onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
+                  onFocus={() => setFocusedField('privacyPolicyUrl')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="https://example.com/privacy"
                   maxLength={256}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
@@ -403,6 +416,8 @@ function App() {
                   <textarea
                     value={firstMessageText}
                     onChange={(e) => setFirstMessageText(e.target.value)}
+                    onFocus={() => setFocusedField('firstMessageText')}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="Добро пожаловать! Выберите интересующий раздел:"
                     rows={4}
                     maxLength={4096}
@@ -427,6 +442,8 @@ function App() {
                     type="text"
                     value={inlineButtonText}
                     onChange={(e) => setInlineButtonText(e.target.value)}
+                    onFocus={() => setFocusedField('inlineButtonText')}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="📋 Выбрать раздел"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(inlineButtonText.length, 64)}`}
@@ -450,6 +467,8 @@ function App() {
                     <textarea
                       value={inlineButtonResponse}
                       onChange={(e) => setInlineButtonResponse(e.target.value)}
+                      onFocus={() => setFocusedField('inlineButtonResponse')}
+                      onBlur={() => setFocusedField(null)}
                       placeholder="Вы выбрали раздел. Вот доступные опции..."
                       rows={3}
                       maxLength={4096}
@@ -523,6 +542,7 @@ function App() {
                   privacyPolicyUrl={privacyPolicyUrl}
                   avatar={avatarUrl || undefined}
                   botPic={botPicUrl || undefined}
+                  focusedField={focusedField}
                   firstMessage={
                     firstMessageText
                       ? {

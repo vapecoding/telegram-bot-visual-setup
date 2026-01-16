@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChatListItem } from './ChatListItem';
 import { BotProfile } from './BotProfile';
 import { ChatStart } from './ChatStart';
@@ -13,6 +13,7 @@ interface TelegramPhoneProps {
   privacyPolicyUrl?: string;
   avatar?: string;
   botPic?: string;
+  focusedField?: string | null;
   firstMessage?: {
     text: string;
     inlineButton?: {
@@ -33,6 +34,7 @@ export function TelegramPhone({
   privacyPolicyUrl,
   avatar,
   botPic,
+  focusedField,
   firstMessage
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
@@ -49,6 +51,38 @@ export function TelegramPhone({
   const handleStartClick = () => {
     setDialogStarted(true);
   };
+
+  // Автопереключение превью при фокусе на поле
+  useEffect(() => {
+    if (!focusedField) return;
+
+    // Маппинг полей на режимы превью
+    const fieldToMode: Record<string, { mode: PreviewMode; needStart?: boolean }> = {
+      // chatlist
+      shortDescription: { mode: 'chatlist' },
+      // profile
+      username: { mode: 'profile' },
+      about: { mode: 'profile' },
+      privacyPolicyUrl: { mode: 'profile' },
+      // dialog (до START)
+      description: { mode: 'dialog' },
+      // dialog (после START)
+      firstMessageText: { mode: 'dialog', needStart: true },
+      inlineButtonText: { mode: 'dialog', needStart: true },
+      inlineButtonResponse: { mode: 'dialog', needStart: true },
+      // botName видно везде - не переключаем
+    };
+
+    const mapping = fieldToMode[focusedField];
+    if (mapping) {
+      setMode(mapping.mode);
+      if (mapping.needStart) {
+        setDialogStarted(true);
+      } else if (mapping.mode === 'dialog') {
+        setDialogStarted(false);
+      }
+    }
+  }, [focusedField]);
 
   return (
     <div className="flex gap-4 items-start">
@@ -102,6 +136,7 @@ export function TelegramPhone({
                 botName={botName}
                 shortDescription={shortDescription}
                 avatar={avatar}
+                focusedField={focusedField}
               />
             )}
 
@@ -112,6 +147,7 @@ export function TelegramPhone({
                 about={about}
                 privacyPolicyUrl={privacyPolicyUrl}
                 avatar={avatar}
+                focusedField={focusedField}
               />
             )}
 
@@ -122,6 +158,7 @@ export function TelegramPhone({
                 avatar={avatar}
                 botPic={botPic}
                 onStartClick={handleStartClick}
+                focusedField={focusedField}
               />
             )}
 
@@ -133,6 +170,7 @@ export function TelegramPhone({
                 inlineButton={firstMessage?.inlineButton}
                 avatar={avatar}
                 botPic={botPic}
+                focusedField={focusedField}
               />
             )}
           </div>

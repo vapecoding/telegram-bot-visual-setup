@@ -4,9 +4,10 @@ interface ChatStartProps {
   avatar?: string;
   botPic?: string;
   onStartClick?: () => void;
+  focusedField?: string | null;
 }
 
-export function ChatStart({ botName, description, avatar, botPic, onStartClick }: ChatStartProps) {
+export function ChatStart({ botName, description, avatar, botPic, onStartClick, focusedField }: ChatStartProps) {
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
       {/* Chat Header */}
@@ -20,7 +21,9 @@ export function ChatStart({ botName, description, avatar, botPic, onStartClick }
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium truncate">{botName || 'Имя бота'}</h3>
+          <h3 className={`font-medium truncate transition-all duration-300 ${
+            focusedField === 'botName' ? 'highlight-pulse-light' : ''
+          }`}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -70,7 +73,9 @@ export function ChatStart({ botName, description, avatar, botPic, onStartClick }
           </h3>
 
           {/* Description */}
-          <div className="text-sm text-gray-700 whitespace-pre-wrap break-words mb-4">
+          <div className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 ${
+            focusedField === 'description' ? 'highlight-pulse-border' : ''
+          }`}>
             {description || 'Здравствуйте! Я ваш цифровой помощник...'}
           </div>
         </div>

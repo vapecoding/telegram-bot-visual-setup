@@ -6,9 +6,10 @@ interface BotProfileProps {
   about: string;
   privacyPolicyUrl?: string;
   avatar?: string;
+  focusedField?: string | null;
 }
 
-export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar }: BotProfileProps) {
+export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, focusedField }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   const handleAvatarClick = () => {
@@ -76,7 +77,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar 
         </div>
 
         {/* Bot Name */}
-        <h2 className="text-white text-xl font-semibold mb-1 truncate px-2">
+        <h2 className={`text-white text-xl font-semibold mb-1 truncate px-2 transition-all duration-300 ${
+          focusedField === 'botName' ? 'highlight-pulse-light' : ''
+        }`}>
           {botName || 'Имя бота'}
         </h2>
         <p className="text-white/80 text-sm">бот</p>
@@ -112,7 +115,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar 
 
       {/* About Section */}
       <div className="px-4 py-3 border-b border-gray-200">
-        <p className="text-gray-900 whitespace-pre-wrap break-words">
+        <p className={`text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
+          focusedField === 'about' ? 'highlight-pulse-border' : ''
+        }`}>
           {about || 'Текст "О боте" отображается здесь. Максимум 120 символов.'}
         </p>
         <p className="text-xs text-gray-500 mt-1">О боте</p>
@@ -121,7 +126,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar 
       {/* Username */}
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div>
-          <p className="text-blue-600">@{username || 'username_bot'}</p>
+          <p className={`text-blue-600 transition-all duration-300 rounded px-1 -mx-1 ${
+            focusedField === 'username' ? 'highlight-pulse-border' : ''
+          }`}>@{username || 'username_bot'}</p>
           <p className="text-xs text-gray-500 mt-1">Username</p>
         </div>
         <button className="w-6 h-6 flex items-center justify-center opacity-40">
@@ -136,7 +143,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar 
             href={privacyPolicyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm"
+            className={`text-blue-600 hover:underline text-sm transition-all duration-300 rounded px-1 -mx-1 inline-block ${
+              focusedField === 'privacyPolicyUrl' ? 'highlight-pulse-border' : ''
+            }`}
           >
             Политика конфиденциальности
           </a>

@@ -2,9 +2,10 @@ interface ChatListItemProps {
   botName: string;
   shortDescription: string;
   avatar?: string;
+  focusedField?: string | null;
 }
 
-export function ChatListItem({ botName, shortDescription, avatar }: ChatListItemProps) {
+export function ChatListItem({ botName, shortDescription, avatar, focusedField }: ChatListItemProps) {
   return (
     <div className="bg-white h-full overflow-hidden">
       {/* Telegram Header - не редактируемый */}
@@ -44,12 +45,16 @@ export function ChatListItem({ botName, shortDescription, avatar }: ChatListItem
           {/* Content */}
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3 overflow-hidden">
             <div className="flex items-start justify-between mb-1">
-              <h3 className="font-semibold text-gray-900 truncate flex-1 min-w-0">
+              <h3 className={`font-semibold text-gray-900 truncate flex-1 min-w-0 transition-all duration-300 ${
+                focusedField === 'botName' ? 'highlight-pulse-shadow' : ''
+              }`}>
                 {botName || 'Имя бота'}
               </h3>
               <span className="text-xs text-gray-500 ml-2 flex-shrink-0">12:34</span>
             </div>
-            <p className="text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap">
+            <p className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-300 ${
+              focusedField === 'shortDescription' ? 'highlight-pulse-shadow' : ''
+            }`}>
               {shortDescription || 'Краткое описание бота...'}
             </p>
           </div>

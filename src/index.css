@@ -1,1 +1,88 @@
 @import "tailwindcss";
+
+/* Highlight Effects for Form-Preview Link */
+
+/* Effect 1: Glow (for botName) */
+.highlight-glow {
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.8), 0 0 16px rgba(59, 130, 246, 0.5);
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.8), 0 0 16px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(59, 130, 246, 1), 0 0 24px rgba(59, 130, 246, 0.7);
+  }
+}
+
+/* Effect 2: Pulsing Border (for shortDescription) */
+.highlight-pulse-border {
+  outline: 2px solid rgba(168, 85, 247, 0.7);
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: border-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes border-pulse {
+  0%, 100% {
+    outline-color: rgba(168, 85, 247, 0.7);
+    outline-offset: 2px;
+  }
+  50% {
+    outline-color: rgba(168, 85, 247, 1);
+    outline-offset: 4px;
+  }
+}
+
+/* Effect 2b: Pulsing Border using box-shadow (for truncated text with overflow) */
+.highlight-pulse-shadow {
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.7);
+  border-radius: 4px;
+  animation: shadow-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes shadow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 1);
+  }
+}
+
+/* Effect 2c: Pulsing Border for dark/blue backgrounds (white/yellow color) */
+.highlight-pulse-light {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: border-pulse-light 1.2s ease-in-out infinite;
+}
+
+@keyframes border-pulse-light {
+  0%, 100% {
+    outline-color: rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+  }
+  50% {
+    outline-color: rgba(255, 220, 100, 1);
+    outline-offset: 4px;
+  }
+}
+
+/* Effect 3: Background Highlight (for description) */
+.highlight-bg {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.15));
+  background-size: 200% 100%;
+  animation: bg-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes bg-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

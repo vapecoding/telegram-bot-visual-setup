@@ -10,9 +10,10 @@ interface FirstMessageProps {
   };
   avatar?: string;
   botPic?: string;
+  focusedField?: string | null;
 }
 
-export function FirstMessage({ botName, description, text, inlineButton, avatar, botPic }: FirstMessageProps) {
+export function FirstMessage({ botName, description, text, inlineButton, avatar, botPic, focusedField }: FirstMessageProps) {
   const [buttonClicked, setButtonClicked] = useState(false);
 
   // Сегодняшняя дата
@@ -32,7 +33,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium truncate">{botName || 'Имя бота'}</h3>
+          <h3 className={`font-medium truncate transition-all duration-300 ${
+            focusedField === 'botName' ? 'highlight-pulse-light' : ''
+          }`}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -82,7 +85,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           </h3>
 
           {/* Description */}
-          <div className="text-sm text-gray-700 whitespace-pre-wrap break-words mb-4">
+          <div className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 ${
+            focusedField === 'description' ? 'highlight-pulse-border' : ''
+          }`}>
             {description || 'Здравствуйте! Я ваш цифровой помощник...'}
           </div>
         </div>
@@ -117,25 +122,11 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
               )}
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
-              <div className="text-sm text-gray-900 whitespace-pre-wrap break-words">
+              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
+                focusedField === 'firstMessageText' ? 'highlight-pulse-border' : ''
+              }`}>
                 {text}
               </div>
-
-              {/* Inline Button (if enabled) */}
-              {inlineButton && inlineButton.text && (
-                <div className="mt-2">
-                  <button
-                    onClick={() => setButtonClicked(true)}
-                    className={`w-full border rounded-lg py-2 px-3 font-medium transition-colors text-center text-sm ${
-                      buttonClicked
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-white border-gray-300 text-blue-600 hover:bg-gray-50 cursor-pointer active:scale-95'
-                    }`}
-                  >
-                    {inlineButton.text}
-                  </button>
-                </div>
-              )}
 
               <div className="flex justify-end mt-1">
                 <span className="text-[10px] text-gray-500">
@@ -143,6 +134,23 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 </span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Inline Button - Telegram style (outside bubble, blurred background) */}
+        {text && inlineButton && inlineButton.text && (
+          <div className="flex gap-2 mb-3 ml-10 -mt-2">
+            <button
+              onClick={() => setButtonClicked(true)}
+              className={`flex-1 py-2.5 px-4 text-center text-sm text-white font-medium rounded-xl
+                bg-black/10 backdrop-blur-[2px] transition-all
+                ${buttonClicked
+                  ? 'bg-black/15 text-white/70'
+                  : 'hover:bg-black/20 cursor-pointer active:scale-[0.98]'
+                } ${focusedField === 'inlineButtonText' ? 'highlight-pulse-border' : ''}`}
+            >
+              {inlineButton.text}
+            </button>
           </div>
         )}
 
@@ -158,7 +166,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
               )}
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
-              <div className="text-sm text-gray-900 whitespace-pre-wrap break-words">
+              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
+                focusedField === 'inlineButtonResponse' ? 'highlight-pulse-border' : ''
+              }`}>
                 {inlineButton.response}
               </div>
               <div className="flex justify-end mt-1">
