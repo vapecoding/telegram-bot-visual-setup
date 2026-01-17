@@ -1,5 +1,5 @@
 {
-  "name": "telegram-bot-settings-viewer",
+  "name": "telegram-bot-visual-setup",
   "private": true,
   "version": "0.1.0",
   "description": "Web app for collecting and validating Telegram bot settings with live preview",

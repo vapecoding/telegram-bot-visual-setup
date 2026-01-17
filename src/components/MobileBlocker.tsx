@@ -3,7 +3,7 @@ export function MobileBlocker() {
     <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-8 lg:hidden">
       <div className="text-center max-w-md">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Telegram Bot Settings Viewer
+          Telegram Bot Visual Setup
         </h1>
         <p className="text-gray-600 mb-6">
           Инструмент для подготовки контента настроек Telegram-бота с live preview

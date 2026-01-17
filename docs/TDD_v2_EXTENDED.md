@@ -1,4 +1,4 @@
-# Technical Design Document: Telegram Bot Settings Viewer
+# Technical Design Document: Telegram Bot Visual Setup
 
 > **CURRENT STATUS: MVP COMPLETED**
 >
@@ -24,7 +24,7 @@
 
 ### 1.3 Решение
 
-**Telegram Bot Settings Viewer** - веб-приложение для сбора, валидации и preview контента настроек Telegram-бота.
+**Telegram Bot Visual Setup** - веб-приложение для сбора, валидации и preview контента настроек Telegram-бота.
 
 **Реализованные функции:**
 1. **Интерактивная форма** - структурированный ввод всех необходимых данных
@@ -77,7 +77,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Заголовок: Telegram Bot Settings Viewer                 │
+│  Заголовок: Telegram Bot Visual Setup                    │
 ├─────────────────────────┬────────────────────────────────┤
 │                         │  [Режимы превью]               │
 │   Форма ввода           │  📋 Список чатов               │

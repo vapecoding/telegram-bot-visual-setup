@@ -1,4 +1,4 @@
-# Telegram Bot Settings Viewer
+# Telegram Bot Visual Setup
 
 Веб-приложение для сбора и валидации контента настроек Telegram-бота с live preview.
 
