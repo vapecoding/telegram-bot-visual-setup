@@ -5,9 +5,10 @@ interface AvatarUploadProps {
   avatarUrl: string | null;
   onAvatarChange: (avatarUrl: string | null, file: File | null) => void;
   onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus }: AvatarUploadProps) {
+export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: AvatarUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -225,6 +226,8 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus }: AvatarUploa
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          onMouseEnter={onFocus}
+          onMouseLeave={onBlur}
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
             ${isDragging

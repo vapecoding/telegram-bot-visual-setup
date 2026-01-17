@@ -2,6 +2,7 @@ interface ChatListItemProps {
   botName: string;
   shortDescription: string;
   avatar?: string;
+  highlightAvatar?: boolean;
   focusedField?: string | null;
 }
 
@@ -11,7 +12,7 @@ const getInitial = (name: string) => {
   return match ? match[0].toUpperCase() : 'B';
 };
 
-export function ChatListItem({ botName, shortDescription, avatar, focusedField }: ChatListItemProps) {
+export function ChatListItem({ botName, shortDescription, avatar, highlightAvatar, focusedField }: ChatListItemProps) {
   return (
     <div className="bg-white h-full overflow-hidden">
       {/* Telegram Header - не редактируемый */}
@@ -41,7 +42,7 @@ export function ChatListItem({ botName, shortDescription, avatar, focusedField }
         <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-l-4 border-blue-500 bg-blue-50">
           {/* Avatar */}
           <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 ${
-            focusedField === 'avatar' ? 'highlight-avatar-pulse' : ''
+            highlightAvatar ? 'highlight-avatar-pulse' : ''
           }`}>
             {avatar ? (
               <img src={avatar} alt={botName} className="w-full h-full object-cover" />

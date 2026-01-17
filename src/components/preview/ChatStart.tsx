@@ -2,7 +2,9 @@ interface ChatStartProps {
   botName: string;
   description: string;
   avatar?: string;
+  highlightAvatar?: boolean;
   botPic?: string;
+  showBotPicPlaceholder?: boolean;
   onStartClick?: () => void;
   focusedField?: string | null;
 }
@@ -13,13 +15,17 @@ const getInitial = (name: string) => {
   return match ? match[0].toUpperCase() : 'B';
 };
 
-export function ChatStart({ botName, description, avatar, botPic, onStartClick, focusedField }: ChatStartProps) {
+export function ChatStart({ botName, description, avatar, highlightAvatar, botPic, showBotPicPlaceholder, onStartClick, focusedField }: ChatStartProps) {
+  // Показываем картинку или placeholder
+  const showPicArea = botPic || showBotPicPlaceholder;
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
       {/* Chat Header */}
       <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3 overflow-hidden">
         <button className="text-xl opacity-40">←</button>
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0">
+        <div className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0 transition-all duration-300 ${
+          highlightAvatar ? 'highlight-avatar-pulse' : ''
+        }`}>
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
           ) : (
@@ -45,27 +51,39 @@ export function ChatStart({ botName, description, avatar, botPic, onStartClick, 
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Description Picture (приветственная картинка) */}
-        {botPic && (
+        {/* Description Picture (приветственная картинка) или placeholder */}
+        {showPicArea && (
           <div className="max-w-sm mx-auto mb-4">
             <div className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${
-              focusedField === 'botPic' ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
+              focusedField === 'botPic' || showBotPicPlaceholder ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
             }`} style={{ aspectRatio: '16 / 9' }}>
-              <img
-                src={botPic}
-                alt="Description Picture"
-                className="w-full h-full object-cover"
-              />
+              {botPic ? (
+                <img
+                  src={botPic}
+                  alt="Description Picture"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <div className="text-4xl mb-2">🖼️</div>
+                    <div className="text-xs">Description Picture</div>
+                    <div className="text-[10px]">640×360px</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Welcome Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 max-w-sm mx-auto mb-4">
-          {/* Profile Photo - скрываем если есть Description Picture */}
-          {!botPic && (
+          {/* Profile Photo - скрываем если есть Description Picture или placeholder */}
+          {!showPicArea && (
             <div className="flex justify-center mb-3">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden">
+              <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden transition-all duration-300 ${
+                highlightAvatar ? 'highlight-avatar-pulse' : ''
+              }`}>
                 {avatar ? (
                   <img src={avatar} alt={botName} className="w-full h-full object-cover" />
                 ) : (

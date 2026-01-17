@@ -6,6 +6,7 @@ interface BotProfileProps {
   about: string;
   privacyPolicyUrl?: string;
   avatar?: string;
+  highlightAvatar?: boolean;
   focusedField?: string | null;
 }
 
@@ -66,7 +67,7 @@ const renderTextWithLinks = (text: string) => {
   });
 };
 
-export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, focusedField }: BotProfileProps) {
+export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   const handleAvatarClick = () => {
@@ -162,9 +163,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             {/* Avatar */}
             <div
               onClick={handleAvatarClick}
-              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden ${
-                avatar ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-              }`}
+              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden transition-all duration-300 ${
+                avatar ? 'cursor-pointer hover:opacity-80' : ''
+              } ${highlightAvatar ? 'highlight-avatar-pulse' : ''}`}
               title={avatar ? 'Нажмите для просмотра в полном размере' : ''}
             >
               {avatar ? (

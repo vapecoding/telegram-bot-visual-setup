@@ -3,7 +3,7 @@ import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
 import { BotPicUpload } from './components/BotPicUpload';
-import { ToastContainer, useToast } from './components/Toast';
+import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
 import { validateBotSettings } from './schemas/botSettings';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 
@@ -185,7 +185,7 @@ function App() {
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
   const [about, setAbout] = useState('');
-  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState('');
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState('https://example.com/privacy');
   const [firstMessageText, setFirstMessageText] = useState('');
   const [inlineButtonText, setInlineButtonText] = useState('');
   const [inlineButtonResponse, setInlineButtonResponse] = useState('');
@@ -194,15 +194,21 @@ function App() {
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showBotPicPlaceholder, setShowBotPicPlaceholder] = useState(false);
+  const [highlightAvatar, setHighlightAvatar] = useState(false);
 
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
   const [isIDBSupported] = useState(isIndexedDBSupported());
   const [hasShownSaveToast, setHasShownSaveToast] = useState(false); // Для показа toast только один раз
+  const [saveIndicatorCount, setSaveIndicatorCount] = useState(0); // Счётчик для мини-индикатора
+  const [saveError, setSaveError] = useState(false); // Ошибка сохранения
+  const justHydratedRef = useRef(true); // Пропуск первого "сохранения" после гидратации
+  const hasShownRestoreToastRef = useRef(false); // Защита от двойного toast в StrictMode
   const saveTimeoutRef = useRef<number | null>(null);
 
   // Toast уведомления
-  const { toasts, dismissToast, showSuccess, showWarning } = useToast();
+  const { toasts, dismissToast, showSuccess, showWarning, showInfo } = useToast();
 
   // Закрытие модального окна по ESC
   useEffect(() => {
@@ -247,7 +253,18 @@ function App() {
           setAvatarUrl(draft.avatarUrl);
           setBotPicUrl(draft.botPicUrl);
 
-          console.log('Draft restored from IndexedDB');
+          // Toast о восстановлении черновика + блокируем будущий toast сохранения
+          setHasShownSaveToast(true);
+          // Защита от двойного вызова в StrictMode
+          if (!hasShownRestoreToastRef.current) {
+            hasShownRestoreToastRef.current = true;
+            setTimeout(() => {
+              showInfo(
+                'Черновик восстановлен',
+                'Данные загружены из браузера'
+              );
+            }, 300);
+          }
         }
       } catch (error) {
         console.error('Failed to restore draft:', error);
@@ -274,6 +291,12 @@ function App() {
 
     // Устанавливаем новый таймер
     saveTimeoutRef.current = window.setTimeout(async () => {
+      // Пропускаем первое "сохранение" сразу после гидратации (это те же данные)
+      if (justHydratedRef.current) {
+        justHydratedRef.current = false;
+        return;
+      }
+
       const draft = {
         username,
         botName,
@@ -291,17 +314,22 @@ function App() {
 
       try {
         await saveDraft(draft);
+        setSaveError(false); // Сброс ошибки при успешном сохранении
 
-        // Показываем toast только при первом сохранении
+        // Показываем toast только при первом реальном сохранении
         if (!hasShownSaveToast) {
           setHasShownSaveToast(true);
           showSuccess(
             'Черновик сохранён',
             'Данные автоматически сохраняются в браузере'
           );
+        } else {
+          // Для повторных сохранений - мини-индикатор
+          setSaveIndicatorCount((c) => c + 1);
         }
       } catch (error) {
         console.error('Failed to save draft:', error);
+        setSaveError(true); // Показать persistent индикатор ошибки
       }
     }, 2000);
 
@@ -492,14 +520,11 @@ function App() {
                     onChange={(e) => setBotName(e.target.value)}
                     onFocus={() => setFocusedField('botName')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Мой Помощник"
+                    placeholder="Отображаемое имя в чатах и профиле"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Отображаемое имя бота. Может содержать любые символы (кириллица, эмодзи)
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(botName.length, 64)}`}>
                       {botName.length} / 64
                     </span>
@@ -517,14 +542,11 @@ function App() {
                     onChange={(e) => setShortDescription(e.target.value)}
                     onFocus={() => setFocusedField('shortDescription')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Ваш цифровой помощник на выставке"
+                    placeholder="Текст в списке контактов и ссылке t.me/botname"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Отображается в списке контактов, ссылке t.me/botname и поиске
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(shortDescription.length, 120)}`}>
                       {shortDescription.length} / 120
                     </span>
@@ -535,11 +557,8 @@ function App() {
                 <AvatarUpload
                   avatarUrl={avatarUrl}
                   onAvatarChange={handleAvatarChange}
-                  onFocus={() => {
-                    // Форсим обновление чтобы переключить режим даже если уже 'avatar'
-                    setFocusedField(null);
-                    setTimeout(() => setFocusedField('avatar'), 0);
-                  }}
+                  onFocus={() => setHighlightAvatar(true)}
+                  onBlur={() => setHighlightAvatar(false)}
                 />
               </div>
 
@@ -561,13 +580,13 @@ function App() {
                     onChange={(e) => setAbout(e.target.value)}
                     onFocus={() => setFocusedField('about')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Официальный бот выставки · t.me/expo_channel"
+                    placeholder="Краткое описание в профиле бота"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
                   />
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs text-gray-500">
-                      Отображается в профиле бота. Ссылки кликабельны.
+                      Ссылки кликабельны
                     </p>
                     <span className={`text-xs ${getCounterColor(about.length, 120)}`}>
                       {about.length} / 120
@@ -592,7 +611,7 @@ function App() {
                       }}
                       onFocus={() => setFocusedField('username')}
                       onBlur={() => setFocusedField(null)}
-                      placeholder="my_helper_bot"
+                      placeholder="Уникальный адрес бота"
                       maxLength={32}
                       className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
                         username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
@@ -603,7 +622,7 @@ function App() {
                   </div>
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs text-gray-500">
-                      5-32 символа, латиница/цифры/_, должен заканчиваться на "bot"
+                      5-32 символа, латиница/цифры/_, заканчивается на "bot"
                     </p>
                     <span className={`text-xs ${getCounterColor(username.length, 32)}`}>
                       {username.length} / 32
@@ -626,10 +645,7 @@ function App() {
                     maxLength={256}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Ссылка на политику конфиденциальности (отображается в профиле бота)
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(privacyPolicyUrl.length, 256)}`}>
                       {privacyPolicyUrl.length} / 256
                     </span>
@@ -649,6 +665,14 @@ function App() {
                   botPicUrl={botPicUrl}
                   onBotPicChange={handleBotPicChange}
                   onFocus={() => setFocusedField('botPic')}
+                  onHoverStart={() => {
+                    setFocusedField('botPic');
+                    setShowBotPicPlaceholder(true);
+                  }}
+                  onHoverEnd={() => {
+                    setFocusedField(null);
+                    setShowBotPicPlaceholder(false);
+                  }}
                 />
 
                 {/* Description */}
@@ -661,15 +685,12 @@ function App() {
                     onChange={(e) => setDescription(e.target.value)}
                     onFocus={() => setFocusedField('description')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Здравствуйте! Я ваш цифровой помощник на форум-выставке..."
+                    placeholder="Текст в разделе «Что умеет этот бот?»"
                     maxLength={512}
                     rows={6}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(description.length, 512)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Отображается на стартовом экране в разделе "Что умеет этот бот?"
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(description.length, 512)}`}>
                       {description.length} / 512
                     </span>
@@ -694,15 +715,12 @@ function App() {
                     onChange={(e) => setFirstMessageText(e.target.value)}
                     onFocus={() => setFocusedField('firstMessageText')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Добро пожаловать! Выберите интересующий раздел:"
+                    placeholder="Сообщение бота после нажатия START"
                     rows={4}
                     maxLength={4096}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(firstMessageText.length, 4096)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Сообщение, которое бот отправит после нажатия START
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(firstMessageText.length, 4096)}`}>
                       {firstMessageText.length} / 4096
                     </span>
@@ -720,14 +738,11 @@ function App() {
                     onChange={(e) => setInlineButtonText(e.target.value)}
                     onFocus={() => setFocusedField('inlineButtonText')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="📋 Выбрать раздел"
+                    placeholder="Кнопка под сообщением"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(inlineButtonText.length, 64)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Кнопка под первым сообщением
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(inlineButtonText.length, 64)}`}>
                       {inlineButtonText.length} / 64
                     </span>
@@ -745,15 +760,12 @@ function App() {
                       onChange={(e) => setInlineButtonResponse(e.target.value)}
                       onFocus={() => setFocusedField('inlineButtonResponse')}
                       onBlur={() => setFocusedField(null)}
-                      placeholder="Вы выбрали раздел. Вот доступные опции..."
+                      placeholder="Ответ бота при нажатии на кнопку"
                       rows={3}
                       maxLength={4096}
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(inlineButtonResponse.length, 4096)}`}
                     />
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-xs text-gray-500">
-                        Preview: текст, который увидит пользователь при нажатии на кнопку
-                      </p>
+                    <div className="flex justify-end mt-1">
                       <span className={`text-xs ${getCounterColor(inlineButtonResponse.length, 4096)}`}>
                         {inlineButtonResponse.length} / 4096
                       </span>
@@ -786,6 +798,8 @@ function App() {
                   avatar={avatarUrl || undefined}
                   botPic={botPicUrl || undefined}
                   focusedField={focusedField}
+                  showBotPicPlaceholder={showBotPicPlaceholder}
+                  highlightAvatar={highlightAvatar}
                   firstMessage={
                     firstMessageText
                       ? {
@@ -870,6 +884,11 @@ function App() {
 
       {/* Toast уведомления */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <SaveIndicator
+        saveCount={saveIndicatorCount}
+        hasActiveToast={toasts.length > 0}
+        hasError={saveError}
+      />
     </>
   );
 }

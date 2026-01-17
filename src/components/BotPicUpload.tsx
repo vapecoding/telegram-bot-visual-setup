@@ -5,9 +5,11 @@ interface BotPicUploadProps {
   botPicUrl: string | null;
   onBotPicChange: (botPicUrl: string | null, file: File | null) => void;
   onFocus?: () => void;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 }
 
-export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus }: BotPicUploadProps) {
+export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart, onHoverEnd }: BotPicUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageInfo, setImageInfo] = useState<{
@@ -154,6 +156,8 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus }: BotPicUploa
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          onMouseEnter={onHoverStart}
+          onMouseLeave={onHoverEnd}
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
             ${isDragging

@@ -112,6 +112,65 @@ function ToastItem({ message, onDismiss }: ToastProps) {
   );
 }
 
+// Мини-индикатор сохранения (для повторных сохранений)
+interface SaveIndicatorProps {
+  saveCount: number; // Увеличивается при каждом сохранении
+  hasActiveToast: boolean; // Не показывать если есть активный toast
+  hasError: boolean; // Ошибка сохранения - показать persistent индикатор
+}
+
+export function SaveIndicator({ saveCount, hasActiveToast, hasError }: SaveIndicatorProps) {
+  const [show, setShow] = useState(false);
+  const [animate, setAnimate] = useState(false);
+
+  // Показ успешного сохранения (временный)
+  useEffect(() => {
+    if (saveCount > 0 && !hasActiveToast && !hasError) {
+      setShow(true);
+      setAnimate(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setAnimate(true));
+      });
+
+      const hideTimer = setTimeout(() => {
+        setAnimate(false);
+        setTimeout(() => setShow(false), 300);
+      }, 1500);
+
+      return () => clearTimeout(hideTimer);
+    }
+  }, [saveCount, hasActiveToast, hasError]);
+
+  // Ошибка - показать постоянно
+  if (hasError) {
+    return (
+      <div
+        className="fixed bottom-6 right-6 z-50 bg-red-100 border border-red-300 rounded-full w-10 h-10 flex items-center justify-center shadow-md"
+        title="Ошибка сохранения"
+      >
+        <span className="text-red-600 text-base">⚠</span>
+      </div>
+    );
+  }
+
+  if (!show || hasActiveToast) return null;
+
+  return (
+    <div
+      className={`
+        fixed bottom-6 right-6 z-50
+        bg-green-100 border border-green-300 rounded-full
+        w-10 h-10 flex items-center justify-center
+        shadow-md transition-all duration-300 ease-out
+        ${animate ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}
+      `}
+      title="Сохранено"
+    >
+      <span className="text-green-600 text-base">💾</span>
+    </div>
+  );
+}
+
 // Toast Container - manages multiple toasts
 interface ToastContainerProps {
   toasts: ToastMessage[];

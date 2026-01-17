@@ -14,6 +14,8 @@ interface TelegramPhoneProps {
   avatar?: string;
   botPic?: string;
   focusedField?: string | null;
+  showBotPicPlaceholder?: boolean;
+  highlightAvatar?: boolean;
   firstMessage?: {
     text: string;
     inlineButton?: {
@@ -35,6 +37,8 @@ export function TelegramPhone({
   avatar,
   botPic,
   focusedField,
+  showBotPicPlaceholder,
+  highlightAvatar,
   firstMessage
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
@@ -138,6 +142,7 @@ export function TelegramPhone({
                 botName={botName}
                 shortDescription={shortDescription}
                 avatar={avatar}
+                highlightAvatar={highlightAvatar}
                 focusedField={focusedField}
               />
             )}
@@ -149,6 +154,7 @@ export function TelegramPhone({
                 about={about}
                 privacyPolicyUrl={privacyPolicyUrl}
                 avatar={avatar}
+                highlightAvatar={highlightAvatar}
                 focusedField={focusedField}
               />
             )}
@@ -158,7 +164,9 @@ export function TelegramPhone({
                 botName={botName}
                 description={description}
                 avatar={avatar}
+                highlightAvatar={highlightAvatar}
                 botPic={botPic}
+                showBotPicPlaceholder={showBotPicPlaceholder}
                 onStartClick={handleStartClick}
                 focusedField={focusedField}
               />
@@ -171,7 +179,9 @@ export function TelegramPhone({
                 text={firstMessage?.text || ''}
                 inlineButton={firstMessage?.inlineButton}
                 avatar={avatar}
+                highlightAvatar={highlightAvatar}
                 botPic={botPic}
+                showBotPicPlaceholder={showBotPicPlaceholder}
                 focusedField={focusedField}
               />
             )}
