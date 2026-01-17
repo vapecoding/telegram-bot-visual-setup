@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { DragEvent, ChangeEvent } from 'react';
 
 interface BotPicUploadProps {
@@ -18,6 +18,33 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
     size: number;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Вычисление размера файла из data URL (base64)
+  const getDataUrlSize = (dataUrl: string): number => {
+    const base64 = dataUrl.split(',')[1];
+    if (!base64) return 0;
+    const padding = (base64.match(/=+$/) || [''])[0].length;
+    return Math.floor((base64.length * 3) / 4) - padding;
+  };
+
+  // Пересчёт imageInfo при внешнем изменении botPicUrl (восстановление из IndexedDB)
+  useEffect(() => {
+    if (!botPicUrl) {
+      setImageInfo(null);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      const size = getDataUrlSize(botPicUrl);
+      setImageInfo({
+        width: img.width,
+        height: img.height,
+        size
+      });
+    };
+    img.src = botPicUrl;
+  }, [botPicUrl]);
 
   // Валидация изображения
   const validateImage = async (file: File): Promise<{ valid: boolean; error?: string }> => {

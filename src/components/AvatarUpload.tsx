@@ -40,6 +40,16 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showModal]);
 
+  // Вычисление размера файла из data URL (base64)
+  const getDataUrlSize = (dataUrl: string): number => {
+    // Формат: data:image/png;base64,XXXXX
+    const base64 = dataUrl.split(',')[1];
+    if (!base64) return 0;
+    // Размер = длина base64 * 3/4 (минус padding)
+    const padding = (base64.match(/=+$/) || [''])[0].length;
+    return Math.floor((base64.length * 3) / 4) - padding;
+  };
+
   // Пересчёт imageInfo при внешнем изменении avatarUrl (демо-данные, восстановление из IndexedDB)
   useEffect(() => {
     if (!avatarUrl) {
@@ -55,10 +65,13 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
       const aspectRatio = width / height;
       const isSquare = aspectRatio >= 0.95 && aspectRatio <= 1.05;
 
+      // Вычисляем размер из data URL
+      const size = getDataUrlSize(avatarUrl);
+
       setImageInfo({
         width,
         height,
-        size: 0, // Размер файла неизвестен для Data URL
+        size,
         isSquare
       });
 

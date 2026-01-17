@@ -4,6 +4,7 @@ import { BotProfile } from './BotProfile';
 import { ChatStart } from './ChatStart';
 import { FirstMessage } from './FirstMessage';
 import { FieldHelp } from './FieldHelp';
+import { DownloadModal } from '../DownloadModal';
 
 interface TelegramPhoneProps {
   username: string;
@@ -26,6 +27,21 @@ interface TelegramPhoneProps {
       response: string;
     };
   };
+  // Download modal data
+  formData?: {
+    username: string;
+    botName: string;
+    shortDescription: string;
+    description: string;
+    about: string;
+    privacyPolicyUrl: string;
+    firstMessageText: string;
+    inlineButtonText: string;
+    inlineButtonResponse: string;
+    avatarUrl: string | null;
+    botPicUrl: string | null;
+  };
+  onDownload?: () => void;
 }
 
 type PreviewMode = 'chatlist' | 'profile' | 'dialog';
@@ -44,10 +60,13 @@ export function TelegramPhone({
   highlightAvatar,
   avatarError,
   avatarWarning,
-  firstMessage
+  firstMessage,
+  formData,
+  onDownload
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
   const [dialogStarted, setDialogStarted] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   // Сброс состояния диалога при смене режима
   const handleModeChange = (newMode: PreviewMode) => {
@@ -95,10 +114,16 @@ export function TelegramPhone({
     }
   }, [focusedField]);
 
+  // Высота телефона для выравнивания кнопки
+  const phoneHeight = 'min(900px, calc(100vh - 8rem))';
+
   return (
     <div className="flex gap-4 items-start">
       {/* Vertical Mode Switcher - Left Side */}
-      <div className="flex flex-col gap-3 pt-4">
+      <div
+        className="flex flex-col gap-3 pt-4"
+        style={{ height: phoneHeight }}
+      >
         <button
           onClick={() => handleModeChange('chatlist')}
           className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
@@ -138,6 +163,19 @@ export function TelegramPhone({
             avatarWarning={avatarWarning}
           />
         </div>
+
+        {/* Spacer to push download button to bottom */}
+        <div className="flex-1" />
+
+        {/* Download Button - aligned with phone bottom */}
+        {formData && (
+          <button
+            onClick={() => setShowDownloadModal(true)}
+            className="px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium bg-green-600 text-white hover:bg-green-700 shadow-md"
+          >
+            📦 Скачать архив
+          </button>
+        )}
       </div>
 
       {/* Phone Frame - Right Side */}
@@ -145,8 +183,8 @@ export function TelegramPhone({
         <div
           className="bg-gray-900 rounded-[3rem] p-4 shadow-2xl overflow-hidden flex-shrink-0"
           style={{
-            height: 'min(900px, calc(100vh - 8rem))',
-            width: 'calc(min(900px, calc(100vh - 8rem)) * 10 / 19.5)'
+            height: phoneHeight,
+            width: `calc(${phoneHeight} * 10 / 19.5)`
           }}
         >
           <div className="bg-white rounded-[2.5rem] overflow-hidden h-full w-full">
@@ -202,6 +240,18 @@ export function TelegramPhone({
           </div>
         </div>
       </div>
+
+      {/* Download Modal */}
+      {formData && (
+        <DownloadModal
+          isOpen={showDownloadModal}
+          onClose={() => setShowDownloadModal(false)}
+          onDownload={() => onDownload?.()}
+          formData={formData}
+          avatarError={avatarError ?? null}
+          avatarWarning={avatarWarning ?? null}
+        />
+      )}
     </div>
   );
 }

@@ -1,11 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
 import { BotPicUpload } from './components/BotPicUpload';
 import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
-import { validateBotSettings } from './schemas/botSettings';
+// validateBotSettings используется в DownloadModal
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
+
+// Утилита для конвертации data URL в Blob
+function dataURLtoBlob(dataURL: string): Blob {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+// Определение расширения файла из data URL
+function getExtensionFromDataURL(dataURL: string): string {
+  const mime = dataURL.match(/data:(.*?);/)?.[1] || 'image/png';
+  if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('gif')) return 'gif';
+  if (mime.includes('webp')) return 'webp';
+  return 'png';
+}
 
 // Генерация демо-аватарки (640x640) - абстрактный робот
 function generateDemoAvatar(): string {
@@ -386,39 +411,60 @@ function App() {
     return 'border-gray-300 focus:ring-blue-500';
   };
 
-  // Обработка экспорта с валидацией
-  const handleExport = () => {
-    // Собираем данные из формы
-    const formData = {
-      username,
-      botName,
-      shortDescription,
-      description,
-      about,
-      privacyPolicyUrl,
-      firstMessage: firstMessageText ? {
-        text: firstMessageText,
-        inlineButton: inlineButtonText ? {
-          text: inlineButtonText,
-          response: inlineButtonResponse || ''
-        } : undefined
-      } : undefined
-    };
+  // Обработка экспорта с генерацией ZIP
+  const handleExport = async () => {
+    try {
+      // Собираем данные для settings.json
+      const settings = {
+        username,
+        botName,
+        shortDescription,
+        description,
+        about,
+        privacyPolicyUrl,
+        firstMessage: firstMessageText ? {
+          text: firstMessageText,
+          inlineButton: inlineButtonText ? {
+            text: inlineButtonText,
+            response: inlineButtonResponse || ''
+          } : undefined
+        } : undefined,
+        // Референсы на файлы (если есть)
+        avatarFile: avatarUrl ? `avatar.${getExtensionFromDataURL(avatarUrl)}` : null,
+        botPicFile: botPicUrl ? `bot_pic.${getExtensionFromDataURL(botPicUrl)}` : null
+      };
 
-    // Валидация через Zod
-    const result = validateBotSettings(formData);
+      // Создаём ZIP архив
+      const zip = new JSZip();
 
-    if (!result.success) {
-      setValidationErrors(result.errors || []);
-      // Скролл к первой ошибке
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+      // Добавляем settings.json
+      zip.file('settings.json', JSON.stringify(settings, null, 2));
+
+      // Добавляем аватарку (если есть)
+      if (avatarUrl) {
+        const avatarBlob = dataURLtoBlob(avatarUrl);
+        const avatarExt = getExtensionFromDataURL(avatarUrl);
+        zip.file(`avatar.${avatarExt}`, avatarBlob);
+      }
+
+      // Добавляем Description Picture (если есть)
+      if (botPicUrl) {
+        const botPicBlob = dataURLtoBlob(botPicUrl);
+        const botPicExt = getExtensionFromDataURL(botPicUrl);
+        zip.file(`bot_pic.${botPicExt}`, botPicBlob);
+      }
+
+      // Генерируем и скачиваем архив
+      const content = await zip.generateAsync({ type: 'blob' });
+      const fileName = username ? `${username}_settings.zip` : 'bot_settings.zip';
+      saveAs(content, fileName);
+
+      // Показываем toast об успешном скачивании
+      showSuccess('Архив скачан', `Файл ${fileName} сохранён`);
+    } catch (error) {
+      console.error('Failed to generate ZIP:', error);
+      showWarning('Ошибка', 'Не удалось создать архив');
     }
-
-    // Успешная валидация
-    setValidationErrors([]);
-    alert('✅ Валидация прошла успешно! (Генерация ZIP будет на следующем этапе)');
-    console.log('Validated data:', result.data);
   };
 
   return (
@@ -770,15 +816,6 @@ function App() {
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-6 border-t border-gray-200 sticky bottom-0 bg-gray-50 py-4 -mx-8 px-8">
-                <button
-                  onClick={handleExport}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  Скачать архив
-                </button>
-              </div>
             </div>
           </div>
 
@@ -812,6 +849,20 @@ function App() {
                         }
                       : undefined
                   }
+                  formData={{
+                    username,
+                    botName,
+                    shortDescription,
+                    description,
+                    about,
+                    privacyPolicyUrl,
+                    firstMessageText,
+                    inlineButtonText,
+                    inlineButtonResponse,
+                    avatarUrl,
+                    botPicUrl
+                  }}
+                  onDownload={handleExport}
                 />
           </div>
         </div>
