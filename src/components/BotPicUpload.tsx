@@ -1,11 +1,13 @@
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef } from 'react';
+import type { DragEvent, ChangeEvent } from 'react';
 
 interface BotPicUploadProps {
   botPicUrl: string | null;
   onBotPicChange: (botPicUrl: string | null, file: File | null) => void;
+  onFocus?: () => void;
 }
 
-export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
+export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus }: BotPicUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageInfo, setImageInfo] = useState<{
@@ -35,11 +37,11 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
         const width = img.width;
         const height = img.height;
 
-        // Строго 640x360px
+        // Требование Telegram: СТРОГО 640x360px
         if (width !== 640 || height !== 360) {
           resolve({
             valid: false,
-            error: `Изображение должно быть 640x360px (текущее: ${width}x${height}px)`
+            error: `Telegram требует строго 640×360px (текущее: ${width}×${height}px)`
           });
           return;
         }
@@ -180,7 +182,10 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
         </div>
       ) : (
         /* Preview Zone */
-        <div className="border-2 border-gray-300 rounded-lg p-4">
+        <div
+          onClick={onFocus}
+          className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-300"
+        >
           <div className="flex items-start gap-4">
             {/* BotPic Preview */}
             <div className="w-48 flex-shrink-0">
@@ -200,16 +205,18 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
               </p>
               {imageInfo && (
                 <div className="text-xs text-gray-600 space-y-1">
-                  <p>Разрешение: {imageInfo.width}x{imageInfo.height}px ✓</p>
+                  <p>Разрешение: {imageInfo.width}×{imageInfo.height}px ✓</p>
                   <p>Размер файла: {(imageInfo.size / 1024).toFixed(1)} KB</p>
-                  <p>Формат: 16:9 ✓</p>
                 </div>
               )}
             </div>
 
             {/* Remove Button */}
             <button
-              onClick={handleRemove}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemove();
+              }}
               className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
             >
               🗑️ Удалить
@@ -224,7 +231,6 @@ export function BotPicUpload({ botPicUrl, onBotPicChange }: BotPicUploadProps) {
           <p className="text-sm text-red-700">⚠️ {error}</p>
         </div>
       )}
-
     </div>
   );
 }

@@ -100,7 +100,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
         {/* Description Picture (приветственная картинка) - ИДЕНТИЧНО ChatStart */}
         {botPic && (
           <div className="max-w-sm mx-auto mb-4">
-            <div className="relative rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16 / 9' }}>
+            <div className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${
+              focusedField === 'botPic' ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
+            }`} style={{ aspectRatio: '16 / 9' }}>
               <img
                 src={botPic}
                 alt="Description Picture"

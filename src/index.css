@@ -87,6 +87,20 @@
   }
 }
 
+/* Effect 5: Soft pulsing ring for avatar (subtle, not too thick) */
+.highlight-avatar-pulse {
+  animation: avatar-ring-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.6), 0 0 8px rgba(250, 204, 21, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.9), 0 0 12px rgba(250, 204, 21, 0.5);
+  }
+}
+
 /* Effect 4: Strong pulsing for inline buttons (more noticeable, finite) */
 .highlight-button-pulse {
   animation: button-pulse 0.8s ease-in-out 3;

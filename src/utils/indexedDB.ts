@@ -12,6 +12,7 @@ const DRAFT_KEY = 'currentDraft';
  * Типы данных для черновика
  */
 export interface DraftData {
+  username: string;
   botName: string;
   shortDescription: string;
   description: string;

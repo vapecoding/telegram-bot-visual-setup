@@ -6,6 +6,178 @@ import { BotPicUpload } from './components/BotPicUpload';
 import { validateBotSettings } from './schemas/botSettings';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 
+// Генерация демо-аватарки (640x640) - абстрактный робот
+function generateDemoAvatar(): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 640;
+  const ctx = canvas.getContext('2d')!;
+
+  // Градиент фона
+  const bgGradient = ctx.createRadialGradient(320, 320, 0, 320, 320, 450);
+  bgGradient.addColorStop(0, '#4f46e5');
+  bgGradient.addColorStop(0.5, '#7c3aed');
+  bgGradient.addColorStop(1, '#2563eb');
+  ctx.fillStyle = bgGradient;
+  ctx.fillRect(0, 0, 640, 640);
+
+  // Декоративные круги на фоне
+  ctx.globalAlpha = 0.1;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(120, 120, 180, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(520, 500, 200, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Голова робота (скруглённый прямоугольник)
+  ctx.fillStyle = '#e0e7ff';
+  ctx.beginPath();
+  ctx.roundRect(180, 140, 280, 300, 40);
+  ctx.fill();
+
+  // Тень головы
+  ctx.fillStyle = '#c7d2fe';
+  ctx.beginPath();
+  ctx.roundRect(180, 380, 280, 60, [0, 0, 40, 40]);
+  ctx.fill();
+
+  // Антенна
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.roundRect(300, 80, 40, 70, 8);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(320, 65, 25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Глаза (LED-стиль)
+  const eyeGradient = ctx.createRadialGradient(250, 260, 0, 250, 260, 40);
+  eyeGradient.addColorStop(0, '#60a5fa');
+  eyeGradient.addColorStop(0.7, '#2563eb');
+  eyeGradient.addColorStop(1, '#1e40af');
+  ctx.fillStyle = eyeGradient;
+  ctx.beginPath();
+  ctx.roundRect(210, 220, 80, 80, 16);
+  ctx.fill();
+
+  const eyeGradient2 = ctx.createRadialGradient(390, 260, 0, 390, 260, 40);
+  eyeGradient2.addColorStop(0, '#60a5fa');
+  eyeGradient2.addColorStop(0.7, '#2563eb');
+  eyeGradient2.addColorStop(1, '#1e40af');
+  ctx.fillStyle = eyeGradient2;
+  ctx.beginPath();
+  ctx.roundRect(350, 220, 80, 80, 16);
+  ctx.fill();
+
+  // Блики в глазах
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.beginPath();
+  ctx.arc(235, 245, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(375, 245, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Рот (улыбка)
+  ctx.strokeStyle = '#6366f1';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(320, 350, 50, 0.2 * Math.PI, 0.8 * Math.PI);
+  ctx.stroke();
+
+  // Щёки (румянец)
+  ctx.fillStyle = 'rgba(251, 191, 36, 0.3)';
+  ctx.beginPath();
+  ctx.ellipse(200, 330, 25, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(440, 330, 25, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Уши (боковые панели)
+  ctx.fillStyle = '#a5b4fc';
+  ctx.beginPath();
+  ctx.roundRect(145, 220, 30, 100, 8);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(465, 220, 30, 100, 8);
+  ctx.fill();
+
+  // Тело (намёк)
+  ctx.fillStyle = '#c7d2fe';
+  ctx.beginPath();
+  ctx.roundRect(220, 450, 200, 120, [0, 0, 30, 30]);
+  ctx.fill();
+
+  // Декоративные линии на теле
+  ctx.strokeStyle = '#a5b4fc';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(260, 480);
+  ctx.lineTo(380, 480);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(260, 510);
+  ctx.lineTo(380, 510);
+  ctx.stroke();
+
+  // Индикатор на теле
+  ctx.fillStyle = '#34d399';
+  ctx.beginPath();
+  ctx.arc(320, 540, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  return canvas.toDataURL('image/png');
+}
+
+// Генерация демо-картинки Description Picture (640x360)
+function generateDemoBotPic(): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 360;
+  const ctx = canvas.getContext('2d')!;
+
+  // Градиент фона
+  const gradient = ctx.createLinearGradient(0, 0, 640, 360);
+  gradient.addColorStop(0, '#1e40af');
+  gradient.addColorStop(0.5, '#7c3aed');
+  gradient.addColorStop(1, '#db2777');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 640, 360);
+
+  // Декоративные круги
+  ctx.globalAlpha = 0.1;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(100, 100, 150, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(540, 260, 200, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Текст
+  ctx.globalAlpha = 1;
+  ctx.font = 'bold 48px sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎪 EXPO 2026', 320, 140);
+
+  ctx.font = '28px sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.fillText('Технологии Будущего', 320, 210);
+
+  ctx.font = '20px sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.fillText('15-20 января · Экспоцентр', 320, 280);
+
+  return canvas.toDataURL('image/png');
+}
+
 function App() {
   const [username, setUsername] = useState('');
   const [botName, setBotName] = useState('');
@@ -17,16 +189,26 @@ function App() {
   const [inlineButtonText, setInlineButtonText] = useState('');
   const [inlineButtonResponse, setInlineButtonResponse] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [botPicUrl, setBotPicUrl] = useState<string | null>(null);
-  const [botPicFile, setBotPicFile] = useState<File | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
   const [isIDBSupported] = useState(isIndexedDBSupported());
   const saveTimeoutRef = useRef<number | null>(null);
+
+  // Закрытие модального окна по ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showClearConfirm) {
+        setShowClearConfirm(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showClearConfirm]);
 
   // Восстановление черновика при загрузке
   useEffect(() => {
@@ -120,15 +302,13 @@ function App() {
   ]);
 
   // Handler для изменения аватара
-  const handleAvatarChange = (url: string | null, file: File | null) => {
+  const handleAvatarChange = (url: string | null, _file: File | null) => {
     setAvatarUrl(url);
-    setAvatarFile(file);
   };
 
   // Handler для изменения Description Picture
-  const handleBotPicChange = (url: string | null, file: File | null) => {
+  const handleBotPicChange = (url: string | null, _file: File | null) => {
     setBotPicUrl(url);
-    setBotPicFile(file);
   };
 
   // Утилита для определения цвета счетчика символов
@@ -233,39 +413,16 @@ function App() {
 
 🎟 Вход свободный по регистрации
 🔗 expo2026.example.com`);
+                      // Генерация демо-картинок
+                      setAvatarUrl(generateDemoAvatar());
+                      setBotPicUrl(generateDemoBotPic());
                     }}
                     className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
                   >
                     Демо-данные
                   </button>
                   <button
-                    onClick={async () => {
-                      if (confirm('Очистить все поля формы?')) {
-                        setUsername('');
-                        setBotName('');
-                        setShortDescription('');
-                        setDescription('');
-                        setAbout('');
-                        setPrivacyPolicyUrl('');
-                        setFirstMessageText('');
-                        setInlineButtonText('');
-                        setInlineButtonResponse('');
-                        setAvatarUrl(null);
-                        setAvatarFile(null);
-                        setBotPicUrl(null);
-                        setBotPicFile(null);
-                        setValidationErrors([]);
-
-                        if (isIDBSupported) {
-                          try {
-                            await clearDraft();
-                            console.log('Draft cleared from IndexedDB');
-                          } catch (error) {
-                            console.error('Failed to clear draft:', error);
-                          }
-                        }
-                      }
-                    }}
+                    onClick={() => setShowClearConfirm(true)}
                     className="px-3 py-1.5 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     Очистить
@@ -323,19 +480,9 @@ function App() {
 
                 {/* Short Description */}
                 <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Короткое описание (Short Description)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShortDescription(about)}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline"
-                      disabled={!about}
-                    >
-                      Скопировать из About
-                    </button>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Короткое описание (Short Description)
+                  </label>
                   <input
                     type="text"
                     value={shortDescription}
@@ -360,6 +507,11 @@ function App() {
                 <AvatarUpload
                   avatarUrl={avatarUrl}
                   onAvatarChange={handleAvatarChange}
+                  onFocus={() => {
+                    // Форсим обновление чтобы переключить режим даже если уже 'avatar'
+                    setFocusedField(null);
+                    setTimeout(() => setFocusedField('avatar'), 0);
+                  }}
                 />
               </div>
 
@@ -464,6 +616,13 @@ function App() {
                   Стартовый экран
                 </h3>
 
+                {/* Description Picture Upload */}
+                <BotPicUpload
+                  botPicUrl={botPicUrl}
+                  onBotPicChange={handleBotPicChange}
+                  onFocus={() => setFocusedField('botPic')}
+                />
+
                 {/* Description */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -488,12 +647,6 @@ function App() {
                     </span>
                   </div>
                 </div>
-
-                {/* Description Picture Upload */}
-                <BotPicUpload
-                  botPicUrl={botPicUrl}
-                  onBotPicChange={handleBotPicChange}
-                />
               </div>
 
               {/* === БЛОК 4: Диалог (после START) === */}
@@ -623,6 +776,69 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Clear Confirmation Modal */}
+      {showClearConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🗑️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Очистить все данные?
+              </h3>
+              <p className="text-sm text-gray-600">
+                Все поля формы будут очищены. Это действие нельзя отменить.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={async () => {
+                  setUsername('');
+                  setBotName('');
+                  setShortDescription('');
+                  setDescription('');
+                  setAbout('');
+                  setPrivacyPolicyUrl('');
+                  setFirstMessageText('');
+                  setInlineButtonText('');
+                  setInlineButtonResponse('');
+                  setAvatarUrl(null);
+                  setBotPicUrl(null);
+                  setValidationErrors([]);
+                  setShowClearConfirm(false);
+
+                  if (isIDBSupported) {
+                    try {
+                      await clearDraft();
+                      console.log('Draft cleared from IndexedDB');
+                    } catch (error) {
+                      console.error('Failed to clear draft:', error);
+                    }
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+              >
+                Очистить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

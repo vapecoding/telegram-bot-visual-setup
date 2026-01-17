@@ -1,18 +1,22 @@
-import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { DragEvent, ChangeEvent } from 'react';
 
 interface AvatarUploadProps {
   avatarUrl: string | null;
   onAvatarChange: (avatarUrl: string | null, file: File | null) => void;
+  onFocus?: () => void;
 }
 
-export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
+export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus }: AvatarUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [imageInfo, setImageInfo] = useState<{
     width: number;
     height: number;
     size: number;
+    isSquare: boolean;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,8 +31,40 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showModal]);
 
+  // Пересчёт imageInfo при внешнем изменении avatarUrl (демо-данные, восстановление из IndexedDB)
+  useEffect(() => {
+    if (!avatarUrl) {
+      setImageInfo(null);
+      setWarning(null);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      const width = img.width;
+      const height = img.height;
+      const aspectRatio = width / height;
+      const isSquare = aspectRatio >= 0.95 && aspectRatio <= 1.05;
+
+      setImageInfo({
+        width,
+        height,
+        size: 0, // Размер файла неизвестен для Data URL
+        isSquare
+      });
+
+      // Устанавливаем предупреждение если не квадрат
+      if (!isSquare) {
+        setWarning(`Рекомендуется квадратное изображение (текущее: ${width}x${height}px). Telegram автоматически обрежет по центру.`);
+      } else {
+        setWarning(null);
+      }
+    };
+    img.src = avatarUrl;
+  }, [avatarUrl]);
+
   // Валидация изображения
-  const validateImage = async (file: File): Promise<{ valid: boolean; error?: string }> => {
+  const validateImage = async (file: File): Promise<{ valid: boolean; error?: string; warning?: string; isSquare?: boolean }> => {
     // Проверка типа файла
     if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
       return { valid: false, error: 'Допустимы только JPEG и PNG форматы' };
@@ -61,12 +97,19 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
 
         // Проверка соотношения сторон (квадрат ±5%)
         const aspectRatio = width / height;
-        if (aspectRatio < 0.95 || aspectRatio > 1.05) {
-          resolve({ valid: false, error: `Изображение должно быть квадратным (текущее: ${width}x${height}px)` });
+        const isSquare = aspectRatio >= 0.95 && aspectRatio <= 1.05;
+
+        if (!isSquare) {
+          // Не блокируем загрузку, только предупреждаем
+          resolve({
+            valid: true,
+            warning: `Рекомендуется квадратное изображение (текущее: ${width}x${height}px). Telegram автоматически обрежет по центру.`,
+            isSquare: false
+          });
           return;
         }
 
-        resolve({ valid: true });
+        resolve({ valid: true, isSquare: true });
       };
 
       img.onerror = () => {
@@ -80,12 +123,18 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
   // Обработка выбора файла
   const handleFile = async (file: File) => {
     setError(null);
+    setWarning(null);
 
     const validation = await validateImage(file);
 
     if (!validation.valid) {
       setError(validation.error || 'Ошибка валидации');
       return;
+    }
+
+    // Устанавливаем предупреждение если есть
+    if (validation.warning) {
+      setWarning(validation.warning);
     }
 
     // Создаем Data URL для preview
@@ -99,7 +148,8 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
         setImageInfo({
           width: img.width,
           height: img.height,
-          size: file.size
+          size: file.size,
+          isSquare: validation.isSquare ?? true
         });
         onAvatarChange(dataUrl, file);
       };
@@ -150,6 +200,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
     onAvatarChange(null, null);
     setImageInfo(null);
     setError(null);
+    setWarning(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -202,11 +253,18 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
         </div>
       ) : (
         /* Preview Zone */
-        <div className="border-2 border-gray-300 rounded-lg p-4">
+        <div
+          onClick={onFocus}
+          className={`border-2 rounded-lg p-4 cursor-pointer hover:border-blue-300 ${
+            warning
+              ? 'border-yellow-400 bg-yellow-50'
+              : 'border-gray-300'
+          }`}
+        >
           <div className="flex items-start gap-4">
             {/* Avatar Preview */}
             <div
-              onClick={() => setShowModal(true)}
+              onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
               className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
               title="Нажмите для просмотра в полном размере"
             >
@@ -219,17 +277,23 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
 
             {/* Info */}
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 mb-2">
-                ✓ Изображение загружено
+              <p className={`text-sm font-medium mb-2 ${
+                warning ? 'text-yellow-700' : 'text-gray-900'
+              }`}>
+                {warning ? '⚠️ Изображение загружено' : '✓ Изображение загружено'}
               </p>
               {imageInfo && (
                 <div className="text-xs text-gray-600 space-y-1">
-                  <p>Разрешение: {imageInfo.width}x{imageInfo.height}px</p>
+                  <p>Разрешение: {imageInfo.width}x{imageInfo.height}px
+                    {!imageInfo.isSquare && (
+                      <span className="text-yellow-600 ml-1">(не квадрат)</span>
+                    )}
+                  </p>
                   <p>Размер файла: {(imageInfo.size / 1024).toFixed(1)} KB</p>
                 </div>
               )}
               <button
-                onClick={() => setShowModal(true)}
+                onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
                 className="text-xs text-blue-600 hover:underline mt-2"
               >
                 🔍 Открыть в полном размере
@@ -238,7 +302,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
 
             {/* Remove Button */}
             <button
-              onClick={handleRemove}
+              onClick={(e) => { e.stopPropagation(); handleRemove(); }}
               className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
             >
               🗑️ Удалить
@@ -251,6 +315,13 @@ export function AvatarUpload({ avatarUrl, onAvatarChange }: AvatarUploadProps) {
       {error && (
         <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-700">⚠️ {error}</p>
+        </div>
+      )}
+
+      {/* Warning Message */}
+      {warning && (
+        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+          <p className="text-sm text-yellow-800">⚠️ {warning}</p>
         </div>
       )}
 

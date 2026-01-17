@@ -60,12 +60,14 @@ export function TelegramPhone({
     const fieldToMode: Record<string, { mode: PreviewMode; needStart?: boolean }> = {
       // chatlist
       shortDescription: { mode: 'chatlist' },
+      avatar: { mode: 'chatlist' },
       // profile
       username: { mode: 'profile' },
       about: { mode: 'profile' },
       privacyPolicyUrl: { mode: 'profile' },
       // dialog (до START)
       description: { mode: 'dialog' },
+      botPic: { mode: 'dialog' },
       // dialog (после START)
       firstMessageText: { mode: 'dialog', needStart: true },
       inlineButtonText: { mode: 'dialog', needStart: true },

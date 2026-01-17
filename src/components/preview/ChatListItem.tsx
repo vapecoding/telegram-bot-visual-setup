@@ -40,7 +40,9 @@ export function ChatListItem({ botName, shortDescription, avatar, focusedField }
         {/* Our Bot Item - HIGHLIGHTED */}
         <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-l-4 border-blue-500 bg-blue-50">
           {/* Avatar */}
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 overflow-hidden">
+          <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 ${
+            focusedField === 'avatar' ? 'highlight-avatar-pulse' : ''
+          }`}>
             {avatar ? (
               <img src={avatar} alt={botName} className="w-full h-full object-cover" />
             ) : (
@@ -68,7 +70,7 @@ export function ChatListItem({ botName, shortDescription, avatar, focusedField }
 
         {/* Other contacts (for context) */}
         <div className="flex items-center gap-3 px-4 py-3 opacity-40">
-          <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0"></div>
+          <div className="w-14 h-14 rounded-full bg-gray-300 flex-shrink-0"></div>
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-semibold text-gray-900">Другой чат</h3>
@@ -79,7 +81,7 @@ export function ChatListItem({ botName, shortDescription, avatar, focusedField }
         </div>
 
         <div className="flex items-center gap-3 px-4 py-3 opacity-40">
-          <div className="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0"></div>
+          <div className="w-14 h-14 rounded-full bg-gray-300 flex-shrink-0"></div>
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-semibold text-gray-900">Групповой чат</h3>
