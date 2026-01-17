@@ -3,6 +3,7 @@ import { ChatListItem } from './ChatListItem';
 import { BotProfile } from './BotProfile';
 import { ChatStart } from './ChatStart';
 import { FirstMessage } from './FirstMessage';
+import { FieldHelp } from './FieldHelp';
 
 interface TelegramPhoneProps {
   username: string;
@@ -16,6 +17,8 @@ interface TelegramPhoneProps {
   focusedField?: string | null;
   showBotPicPlaceholder?: boolean;
   highlightAvatar?: boolean;
+  avatarError?: string | null;
+  avatarWarning?: string | null;
   firstMessage?: {
     text: string;
     inlineButton?: {
@@ -39,6 +42,8 @@ export function TelegramPhone({
   focusedField,
   showBotPicPlaceholder,
   highlightAvatar,
+  avatarError,
+  avatarWarning,
   firstMessage
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
@@ -64,7 +69,7 @@ export function TelegramPhone({
     const fieldToMode: Record<string, { mode: PreviewMode; needStart?: boolean }> = {
       // chatlist
       shortDescription: { mode: 'chatlist' },
-      avatar: { mode: 'chatlist' },
+      // avatar - НЕ переключаем, он виден везде
       // profile
       username: { mode: 'profile' },
       about: { mode: 'profile' },
@@ -124,6 +129,15 @@ export function TelegramPhone({
         >
           💬 Диалог
         </button>
+
+        {/* Field Help Block */}
+        <div className="mt-4">
+          <FieldHelp
+            focusedField={focusedField}
+            avatarError={avatarError}
+            avatarWarning={avatarWarning}
+          />
+        </div>
       </div>
 
       {/* Phone Frame - Right Side */}

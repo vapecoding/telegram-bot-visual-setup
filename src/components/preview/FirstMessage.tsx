@@ -108,7 +108,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
         {showPicArea && (
           <div className="max-w-sm mx-auto mb-4">
             <div className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${
-              focusedField === 'botPic' || showBotPicPlaceholder ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
+              focusedField === 'botPic' || showBotPicPlaceholder ? 'highlight-pic-pulse' : ''
             }`} style={{ aspectRatio: '16 / 9' }}>
               {botPic ? (
                 <img
@@ -153,7 +153,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
           {/* Description */}
           <div className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 ${
-            focusedField === 'description' ? 'highlight-pulse-border' : ''
+            focusedField === 'description' ? 'highlight-pulse-shadow' : ''
           }`}>
             {description || 'Здравствуйте! Я ваш цифровой помощник...'}
           </div>
@@ -192,7 +192,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
               <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-                focusedField === 'firstMessageText' ? 'highlight-pulse-border' : ''
+                focusedField === 'firstMessageText' ? 'highlight-pulse-shadow' : ''
               }`}>
                 {text}
               </div>
@@ -238,7 +238,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
               <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-                focusedField === 'inlineButtonResponse' ? 'highlight-pulse-border' : ''
+                focusedField === 'inlineButtonResponse' ? 'highlight-pulse-shadow' : ''
               }`}>
                 {inlineButton.response}
               </div>

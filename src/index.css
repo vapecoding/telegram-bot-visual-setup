@@ -36,38 +36,32 @@
   }
 }
 
-/* Effect 2b: Pulsing Border using box-shadow (for truncated text with overflow) */
+/* Effect 2b: Pulsing background for text in constrained containers */
 .highlight-pulse-shadow {
-  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.7);
   border-radius: 4px;
-  animation: shadow-pulse 1.2s ease-in-out infinite;
+  animation: bg-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes shadow-pulse {
+@keyframes bg-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.7);
+    background-color: rgba(168, 85, 247, 0.1);
   }
   50% {
-    box-shadow: 0 0 0 4px rgba(168, 85, 247, 1);
+    background-color: rgba(168, 85, 247, 0.25);
   }
 }
 
-/* Effect 2c: Pulsing Border for dark/blue backgrounds (white/yellow color) */
+/* Effect 2c: Text glow for dark/blue backgrounds (white/yellow glow) */
 .highlight-pulse-light {
-  outline: 2px solid rgba(255, 255, 255, 0.8);
-  outline-offset: 2px;
-  border-radius: 4px;
-  animation: border-pulse-light 1.2s ease-in-out infinite;
+  animation: text-glow-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes border-pulse-light {
+@keyframes text-glow-pulse {
   0%, 100% {
-    outline-color: rgba(255, 255, 255, 0.8);
-    outline-offset: 2px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px rgba(255, 255, 255, 0.3);
   }
   50% {
-    outline-color: rgba(255, 220, 100, 1);
-    outline-offset: 4px;
+    text-shadow: 0 0 12px rgba(255, 220, 100, 0.9), 0 0 24px rgba(255, 220, 100, 0.5), 0 0 36px rgba(255, 220, 100, 0.3);
   }
 }
 
@@ -101,20 +95,31 @@
   }
 }
 
-/* Effect 4: Strong pulsing for inline buttons (more noticeable, finite) */
+/* Effect 4: Pulsing yellow ring for inline buttons */
 .highlight-button-pulse {
-  animation: button-pulse 0.8s ease-in-out 3;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6);
+  animation: button-ring-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes button-pulse {
+@keyframes button-ring-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6);
-    transform: scale(1);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.7);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(255, 220, 100, 1), 0 0 30px rgba(255, 220, 100, 0.8);
-    transform: scale(1.02);
+    box-shadow: 0 0 0 5px rgba(250, 204, 21, 1);
+  }
+}
+
+/* Effect 6: Pulsing ring for botPic */
+.highlight-pic-pulse {
+  animation: pic-ring-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pic-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.9);
   }
 }
 

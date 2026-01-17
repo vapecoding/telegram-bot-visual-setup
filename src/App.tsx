@@ -197,6 +197,8 @@ function App() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showBotPicPlaceholder, setShowBotPicPlaceholder] = useState(false);
   const [highlightAvatar, setHighlightAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [avatarWarning, setAvatarWarning] = useState<string | null>(null);
 
   // Вычисляемое активное поле: hover имеет приоритет, но focus сохраняется при редактировании
   const focusedField = hoveredField || inputFocusedField;
@@ -514,10 +516,7 @@ function App() {
                 </h3>
 
                 {/* Bot Name */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Имя бота (Display Name)
-                  </label>
+                <div className="mb-4">
                   <input
                     type="text"
                     value={botName}
@@ -526,7 +525,7 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('botName')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Отображаемое имя в чатах и профиле"
+                    placeholder="Имя бота"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
                   />
@@ -538,10 +537,7 @@ function App() {
                 </div>
 
                 {/* Short Description */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Короткое описание (Short Description)
-                  </label>
+                <div className="mb-4">
                   <input
                     type="text"
                     value={shortDescription}
@@ -550,7 +546,7 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('shortDescription')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Текст в списке контактов и ссылке t.me/botname"
+                    placeholder="Короткое описание"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
                   />
@@ -567,6 +563,12 @@ function App() {
                   onAvatarChange={handleAvatarChange}
                   onFocus={() => setHighlightAvatar(true)}
                   onBlur={() => setHighlightAvatar(false)}
+                  onHoverStart={() => setHoveredField('avatar')}
+                  onHoverEnd={() => setHoveredField(null)}
+                  onValidationChange={(err, warn) => {
+                    setAvatarError(err);
+                    setAvatarWarning(warn);
+                  }}
                 />
               </div>
 
@@ -578,10 +580,7 @@ function App() {
                 </h3>
 
                 {/* About */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    О боте (About)
-                  </label>
+                <div className="mb-4">
                   <input
                     type="text"
                     value={about}
@@ -590,14 +589,11 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('about')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Краткое описание в профиле бота"
+                    placeholder="О боте"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
                   />
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      Ссылки кликабельны
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(about.length, 120)}`}>
                       {about.length} / 120
                     </span>
@@ -605,17 +601,13 @@ function App() {
                 </div>
 
                 {/* Username */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username бота
-                  </label>
+                <div className="mb-4">
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => {
-                        // Автоматически приводим к lowercase и убираем недопустимые символы
                         const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                         setUsername(value);
                       }}
@@ -623,7 +615,7 @@ function App() {
                       onMouseLeave={() => setHoveredField(null)}
                       onFocus={() => setInputFocusedField('username')}
                       onBlur={() => setInputFocusedField(null)}
-                      placeholder="Уникальный адрес бота"
+                      placeholder="username_bot"
                       maxLength={32}
                       className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
                         username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
@@ -632,10 +624,7 @@ function App() {
                       }`}
                     />
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      5-32 символа, латиница/цифры/_, заканчивается на "bot"
-                    </p>
+                  <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(username.length, 32)}`}>
                       {username.length} / 32
                     </span>
@@ -643,10 +632,7 @@ function App() {
                 </div>
 
                 {/* Privacy Policy URL */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Политика конфиденциальности (Privacy Policy URL)
-                  </label>
+                <div className="mb-4">
                   <input
                     type="url"
                     value={privacyPolicyUrl}
@@ -655,7 +641,7 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('privacyPolicyUrl')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="https://example.com/privacy"
+                    placeholder="Privacy Policy URL"
                     maxLength={256}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
                   />
@@ -690,10 +676,7 @@ function App() {
                 />
 
                 {/* Description */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Описание (Description)
-                  </label>
+                <div className="mb-4">
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -701,9 +684,9 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('description')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Текст в разделе «Что умеет этот бот?»"
+                    placeholder="Описание"
                     maxLength={512}
-                    rows={6}
+                    rows={5}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(description.length, 512)}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -723,9 +706,6 @@ function App() {
 
                 {/* First Message Text */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Текст первого сообщения
-                  </label>
                   <textarea
                     value={firstMessageText}
                     onChange={(e) => setFirstMessageText(e.target.value)}
@@ -733,8 +713,8 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('firstMessageText')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Сообщение бота после нажатия START"
-                    rows={4}
+                    placeholder="Первое сообщение"
+                    rows={3}
                     maxLength={4096}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(firstMessageText.length, 4096)}`}
                   />
@@ -747,9 +727,6 @@ function App() {
 
                 {/* Inline Button Text */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Текст inline-кнопки (опционально)
-                  </label>
                   <input
                     type="text"
                     value={inlineButtonText}
@@ -758,7 +735,7 @@ function App() {
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('inlineButtonText')}
                     onBlur={() => setInputFocusedField(null)}
-                    placeholder="Кнопка под сообщением"
+                    placeholder="Inline-кнопка"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(inlineButtonText.length, 64)}`}
                   />
@@ -772,9 +749,6 @@ function App() {
                 {/* Inline Button Response */}
                 {inlineButtonText && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ответ на нажатие кнопки (опционально)
-                    </label>
                     <textarea
                       value={inlineButtonResponse}
                       onChange={(e) => setInlineButtonResponse(e.target.value)}
@@ -782,7 +756,7 @@ function App() {
                       onMouseLeave={() => setHoveredField(null)}
                       onFocus={() => setInputFocusedField('inlineButtonResponse')}
                       onBlur={() => setInputFocusedField(null)}
-                      placeholder="Ответ бота при нажатии на кнопку"
+                      placeholder="Ответ на кнопку"
                       rows={3}
                       maxLength={4096}
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(inlineButtonResponse.length, 4096)}`}
@@ -822,6 +796,8 @@ function App() {
                   focusedField={focusedField}
                   showBotPicPlaceholder={showBotPicPlaceholder}
                   highlightAvatar={highlightAvatar}
+                  avatarError={avatarError}
+                  avatarWarning={avatarWarning}
                   firstMessage={
                     firstMessageText
                       ? {

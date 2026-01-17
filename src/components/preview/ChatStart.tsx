@@ -55,7 +55,7 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
         {showPicArea && (
           <div className="max-w-sm mx-auto mb-4">
             <div className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${
-              focusedField === 'botPic' || showBotPicPlaceholder ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
+              focusedField === 'botPic' || showBotPicPlaceholder ? 'highlight-pic-pulse' : ''
             }`} style={{ aspectRatio: '16 / 9' }}>
               {botPic ? (
                 <img
@@ -100,7 +100,7 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
 
           {/* Description */}
           <div className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 ${
-            focusedField === 'description' ? 'highlight-pulse-border' : ''
+            focusedField === 'description' ? 'highlight-pulse-shadow' : ''
           }`}>
             {description || 'Здравствуйте! Я ваш цифровой помощник...'}
           </div>

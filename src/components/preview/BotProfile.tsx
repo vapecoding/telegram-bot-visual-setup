@@ -76,8 +76,14 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
     }
   };
 
-  // Проверяем, нужна ли бегущая строка для имени (не вмещается)
-  const needsMarquee = botName.length > 20;
+  // Адаптивный размер текста для длинных имён
+  const getNameSizeClass = (name: string) => {
+    const len = name.length;
+    if (len <= 15) return 'text-xl';
+    if (len <= 25) return 'text-lg';
+    if (len <= 35) return 'text-base';
+    return 'text-sm';
+  };
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full overflow-y-auto">
@@ -112,13 +118,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
 
             {/* Name overlay at bottom of avatar */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
-              <div className="overflow-hidden whitespace-nowrap">
-                <p className={`text-white text-xl font-semibold drop-shadow-lg ${
-                  needsMarquee ? 'animate-marquee inline-block' : 'truncate'
-                }`}>
-                  {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
-                </p>
-              </div>
+              <p className={`text-white ${getNameSizeClass(botName)} font-semibold drop-shadow-lg truncate`}>
+                {botName || 'Имя бота'}
+              </p>
               <p className="text-white/80 text-sm drop-shadow">bot</p>
             </div>
           </div>
@@ -176,11 +178,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             </div>
 
             {/* Bot Name */}
-            <div className="overflow-hidden whitespace-nowrap px-2 mb-1">
-              <h2 className={`text-white text-xl font-semibold transition-all duration-300 ${
-                needsMarquee ? 'animate-marquee inline-block' : 'truncate'
-              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
-                {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
+            <div className="px-2 mb-1">
+              <h2 className={`text-white ${getNameSizeClass(botName)} font-semibold transition-all duration-300 truncate ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
+                {botName || 'Имя бота'}
               </h2>
             </div>
             <p className="text-white/80 text-sm mb-4">бот</p>
@@ -211,7 +211,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       {/* About Section */}
       <div className="px-4 py-3 border-b border-gray-200">
         <p className={`text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-          focusedField === 'about' ? 'highlight-pulse-border' : ''
+          focusedField === 'about' ? 'highlight-pulse-shadow' : ''
         }`}>
           {about ? renderTextWithLinks(about) : 'Текст "О боте" отображается здесь. Максимум 120 символов.'}
         </p>
@@ -222,7 +222,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div>
           <p className={`text-blue-600 transition-all duration-300 rounded px-1 -mx-1 ${
-            focusedField === 'username' ? 'highlight-pulse-border' : ''
+            focusedField === 'username' ? 'highlight-pulse-shadow' : ''
           }`}>@{username || 'username_bot'}</p>
           <p className="text-xs text-gray-500 mt-1">Username</p>
         </div>
@@ -239,7 +239,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             target="_blank"
             rel="noopener noreferrer"
             className={`text-blue-600 hover:underline text-sm transition-all duration-300 rounded px-1 -mx-1 inline-block ${
-              focusedField === 'privacyPolicyUrl' ? 'highlight-pulse-border' : ''
+              focusedField === 'privacyPolicyUrl' ? 'highlight-pulse-shadow' : ''
             }`}
           >
             Политика конфиденциальности

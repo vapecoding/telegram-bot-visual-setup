@@ -138,16 +138,7 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
   };
 
   return (
-    <div className="mb-6">
-      <div className="mb-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Description Picture (Приветственная картинка)
-        </label>
-        <p className="text-xs text-gray-500 mt-1">
-          Отображается на стартовом экране над текстом «Что умеет этот бот?»
-        </p>
-      </div>
-
+    <div className="mb-4">
       {/* Upload Zone */}
       {!botPicUrl ? (
         <div
@@ -168,12 +159,9 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
             }
           `}
         >
-          <div className="text-5xl mb-3">🖼️</div>
-          <p className="text-sm font-medium text-gray-700 mb-1">
-            Перетащите изображение или нажмите для выбора
-          </p>
-          <p className="text-xs text-gray-500">
-            JPEG или PNG, строго 640x360px, до 5MB
+          <div className="text-4xl mb-2">🖼️</div>
+          <p className="text-sm text-gray-600">
+            Description Picture
           </p>
 
           <input

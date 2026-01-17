@@ -6,12 +6,20 @@ interface AvatarUploadProps {
   onAvatarChange: (avatarUrl: string | null, file: File | null) => void;
   onFocus?: () => void;
   onBlur?: () => void;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
+  onValidationChange?: (error: string | null, warning: string | null) => void;
 }
 
-export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: AvatarUploadProps) {
+export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHoverStart, onHoverEnd, onValidationChange }: AvatarUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+
+  // Уведомляем родителя об изменении валидации
+  useEffect(() => {
+    onValidationChange?.(error, warning);
+  }, [error, warning, onValidationChange]);
   const [showModal, setShowModal] = useState(false);
   const [imageInfo, setImageInfo] = useState<{
     width: number;
@@ -208,16 +216,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: Ava
   };
 
   return (
-    <div className="mb-6">
-      <div className="mb-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Profile Photo (Аватар бота)
-        </label>
-        <p className="text-xs text-gray-500 mt-1">
-          Круглая аватарка в профиле бота, списке чатов и заголовках сообщений
-        </p>
-      </div>
-
+    <div className="mb-4">
       {/* Upload Zone */}
       {!avatarUrl ? (
         <div
@@ -226,8 +225,8 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: Ava
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          onMouseEnter={onFocus}
-          onMouseLeave={onBlur}
+          onMouseEnter={() => { onFocus?.(); onHoverStart?.(); }}
+          onMouseLeave={() => { onBlur?.(); onHoverEnd?.(); }}
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
             ${isDragging
@@ -238,12 +237,9 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: Ava
             }
           `}
         >
-          <div className="text-5xl mb-3">📷</div>
-          <p className="text-sm font-medium text-gray-700 mb-1">
-            Перетащите изображение или нажмите для выбора
-          </p>
-          <p className="text-xs text-gray-500">
-            JPEG или PNG, до 5MB, минимум 640x640px, квадратное
+          <div className="text-4xl mb-2">📷</div>
+          <p className="text-sm text-gray-600">
+            Аватар
           </p>
 
           <input
@@ -258,8 +254,8 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: Ava
         /* Preview Zone */
         <div
           onClick={onFocus}
-          onMouseEnter={onFocus}
-          onMouseLeave={onBlur}
+          onMouseEnter={() => { onFocus?.(); onHoverStart?.(); }}
+          onMouseLeave={() => { onBlur?.(); onHoverEnd?.(); }}
           className={`border-2 rounded-lg p-4 cursor-pointer hover:border-blue-300 ${
             warning
               ? 'border-yellow-400 bg-yellow-50'
