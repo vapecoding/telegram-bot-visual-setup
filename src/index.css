@@ -86,3 +86,34 @@
     background-position: -200% 0;
   }
 }
+
+/* Effect 4: Strong pulsing for inline buttons (more noticeable, finite) */
+.highlight-button-pulse {
+  animation: button-pulse 0.8s ease-in-out 3;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+@keyframes button-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255, 220, 100, 1), 0 0 30px rgba(255, 220, 100, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+/* Marquee animation for long bot names */
+.animate-marquee {
+  animation: marquee 8s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

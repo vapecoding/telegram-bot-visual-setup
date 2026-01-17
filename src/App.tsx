@@ -199,9 +199,79 @@ function App() {
           {/* Left Column: Form */}
           <div className="w-1/2 p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
             <div className="max-w-xl">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                Настройки бота
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Настройки бота
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Демо-данные для всех полей
+                      setUsername('expo_helper_bot');
+                      setBotName('🤖 Помощник Выставки');
+                      setShortDescription('🎪 Ваш гид по выставке технологий');
+                      setDescription(`🎉 Добро пожаловать на выставку инноваций!
+
+Я помогу вам:
+📍 Найти интересующий стенд
+📅 Узнать расписание мероприятий
+🎤 Получить информацию о спикерах
+🎟 Забронировать место на мастер-класс
+
+Выберите нужный раздел или напишите свой вопрос 👇`);
+                      setAbout('🤖 Официальный бот выставки · t.me/expo2026');
+                      setPrivacyPolicyUrl('https://expo.example.com/privacy');
+                      setFirstMessageText(`Бот запущен! 🎉
+
+Нажмите кнопку ниже, чтобы узнать подробности о выставке.`);
+                      setInlineButtonText('📍 О выставке');
+                      setInlineButtonResponse(`🏛 Выставка «Технологии Будущего 2026»
+
+📅 Даты: 15-20 января
+📍 Место: Экспоцентр, павильон 2
+⏰ Часы работы: 10:00 — 20:00
+
+🎟 Вход свободный по регистрации
+🔗 expo2026.example.com`);
+                    }}
+                    className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    Демо-данные
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm('Очистить все поля формы?')) {
+                        setUsername('');
+                        setBotName('');
+                        setShortDescription('');
+                        setDescription('');
+                        setAbout('');
+                        setPrivacyPolicyUrl('');
+                        setFirstMessageText('');
+                        setInlineButtonText('');
+                        setInlineButtonResponse('');
+                        setAvatarUrl(null);
+                        setAvatarFile(null);
+                        setBotPicUrl(null);
+                        setBotPicFile(null);
+                        setValidationErrors([]);
+
+                        if (isIDBSupported) {
+                          try {
+                            await clearDraft();
+                            console.log('Draft cleared from IndexedDB');
+                          } catch (error) {
+                            console.error('Failed to clear draft:', error);
+                          }
+                        }
+                      }
+                    }}
+                    className="px-3 py-1.5 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Очистить
+                  </button>
+                </div>
+              </div>
 
               {/* Validation Errors Block */}
               {validationErrors.length > 0 && (
@@ -219,193 +289,218 @@ function App() {
                 </div>
               )}
 
-              {/* Username */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username бота
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+              {/* === БЛОК 1: Список чатов (ChatList) === */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">1</span>
+                  Список чатов
+                </h3>
+
+                {/* Bot Name */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Имя бота (Display Name)
+                  </label>
                   <input
                     type="text"
-                    value={username}
-                    onChange={(e) => {
-                      // Автоматически приводим к lowercase и убираем недопустимые символы
-                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                      setUsername(value);
-                    }}
-                    onFocus={() => setFocusedField('username')}
+                    value={botName}
+                    onChange={(e) => setBotName(e.target.value)}
+                    onFocus={() => setFocusedField('botName')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="my_helper_bot"
-                    maxLength={32}
-                    className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
-                      username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
-                        ? 'border-yellow-500 focus:ring-yellow-500'
-                        : 'border-gray-300 focus:ring-blue-500'
-                    }`}
+                    placeholder="Мой Помощник"
+                    maxLength={64}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
                   />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Отображаемое имя бота. Может содержать любые символы (кириллица, эмодзи)
+                    </p>
+                    <span className={`text-xs ${getCounterColor(botName.length, 64)}`}>
+                      {botName.length} / 64
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    5-32 символа, латиница/цифры/_, должен заканчиваться на "bot"
-                  </p>
-                  <span className={`text-xs ${getCounterColor(username.length, 32)}`}>
-                    {username.length} / 32
-                  </span>
-                </div>
-              </div>
 
-              {/* Bot Name */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Имя бота (Display Name)
-                </label>
-                <input
-                  type="text"
-                  value={botName}
-                  onChange={(e) => setBotName(e.target.value)}
-                  onFocus={() => setFocusedField('botName')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="Мой Помощник"
-                  maxLength={64}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
+                {/* Short Description */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Короткое описание (Short Description)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShortDescription(about)}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      disabled={!about}
+                    >
+                      Скопировать из About
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={shortDescription}
+                    onChange={(e) => setShortDescription(e.target.value)}
+                    onFocus={() => setFocusedField('shortDescription')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Ваш цифровой помощник на выставке"
+                    maxLength={120}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Отображается в списке контактов, ссылке t.me/botname и поиске
+                    </p>
+                    <span className={`text-xs ${getCounterColor(shortDescription.length, 120)}`}>
+                      {shortDescription.length} / 120
+                    </span>
+                  </div>
+                </div>
+
+                {/* Avatar Upload */}
+                <AvatarUpload
+                  avatarUrl={avatarUrl}
+                  onAvatarChange={handleAvatarChange}
                 />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Отображаемое имя бота. Может содержать любые символы (кириллица, эмодзи)
-                  </p>
-                  <span className={`text-xs ${getCounterColor(botName.length, 64)}`}>
-                    {botName.length} / 64
-                  </span>
-                </div>
               </div>
 
-              {/* Avatar Upload */}
-              <AvatarUpload
-                avatarUrl={avatarUrl}
-                onAvatarChange={handleAvatarChange}
-              />
+              {/* === БЛОК 2: Профиль бота === */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">2</span>
+                  Профиль бота
+                </h3>
 
-              {/* Description Picture Upload */}
-              <BotPicUpload
-                botPicUrl={botPicUrl}
-                onBotPicChange={handleBotPicChange}
-              />
-
-              {/* Short Description */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Короткое описание (Short Description)
+                {/* About */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    О боте (About)
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShortDescription(about)}
-                    className="text-xs text-blue-600 hover:text-blue-800 underline"
-                    disabled={!about}
-                  >
-                    Скопировать из About
-                  </button>
+                  <input
+                    type="text"
+                    value={about}
+                    onChange={(e) => setAbout(e.target.value)}
+                    onFocus={() => setFocusedField('about')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Официальный бот выставки · t.me/expo_channel"
+                    maxLength={120}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Отображается в профиле бота. Ссылки кликабельны.
+                    </p>
+                    <span className={`text-xs ${getCounterColor(about.length, 120)}`}>
+                      {about.length} / 120
+                    </span>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={shortDescription}
-                  onChange={(e) => setShortDescription(e.target.value)}
-                  onFocus={() => setFocusedField('shortDescription')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="Ваш цифровой помощник на выставке"
-                  maxLength={120}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
-                />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Отображается в списке контактов, ссылке t.me/botname и поиске
-                  </p>
-                  <span className={`text-xs ${getCounterColor(shortDescription.length, 120)}`}>
-                    {shortDescription.length} / 120
-                  </span>
+
+                {/* Username */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Username бота
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        // Автоматически приводим к lowercase и убираем недопустимые символы
+                        const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                        setUsername(value);
+                      }}
+                      onFocus={() => setFocusedField('username')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder="my_helper_bot"
+                      maxLength={32}
+                      className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
+                        username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
+                          ? 'border-yellow-500 focus:ring-yellow-500'
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      5-32 символа, латиница/цифры/_, должен заканчиваться на "bot"
+                    </p>
+                    <span className={`text-xs ${getCounterColor(username.length, 32)}`}>
+                      {username.length} / 32
+                    </span>
+                  </div>
+                </div>
+
+                {/* Privacy Policy URL */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Политика конфиденциальности (Privacy Policy URL)
+                  </label>
+                  <input
+                    type="url"
+                    value={privacyPolicyUrl}
+                    onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
+                    onFocus={() => setFocusedField('privacyPolicyUrl')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="https://example.com/privacy"
+                    maxLength={256}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Ссылка на политику конфиденциальности (отображается в профиле бота)
+                    </p>
+                    <span className={`text-xs ${getCounterColor(privacyPolicyUrl.length, 256)}`}>
+                      {privacyPolicyUrl.length} / 256
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Описание (Description)
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  onFocus={() => setFocusedField('description')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="Здравствуйте! Я ваш цифровой помощник на форум-выставке..."
-                  maxLength={512}
-                  rows={6}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(description.length, 512)}`}
-                />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Отображается на стартовом экране в разделе "What can this bot do?"
-                  </p>
-                  <span className={`text-xs ${getCounterColor(description.length, 512)}`}>
-                    {description.length} / 512
-                  </span>
+              {/* === БЛОК 3: Стартовый экран (до START) === */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">3</span>
+                  Стартовый экран
+                </h3>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Описание (Description)
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onFocus={() => setFocusedField('description')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Здравствуйте! Я ваш цифровой помощник на форум-выставке..."
+                    maxLength={512}
+                    rows={6}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(description.length, 512)}`}
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Отображается на стартовом экране в разделе "Что умеет этот бот?"
+                    </p>
+                    <span className={`text-xs ${getCounterColor(description.length, 512)}`}>
+                      {description.length} / 512
+                    </span>
+                  </div>
                 </div>
+
+                {/* Description Picture Upload */}
+                <BotPicUpload
+                  botPicUrl={botPicUrl}
+                  onBotPicChange={handleBotPicChange}
+                />
               </div>
 
-              {/* About */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  О боте (About)
-                </label>
-                <input
-                  type="text"
-                  value={about}
-                  onChange={(e) => setAbout(e.target.value)}
-                  onFocus={() => setFocusedField('about')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="Цифровой помощник выставки"
-                  maxLength={120}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
-                />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Отображается в профиле бота
-                  </p>
-                  <span className={`text-xs ${getCounterColor(about.length, 120)}`}>
-                    {about.length} / 120
-                  </span>
-                </div>
-              </div>
-
-              {/* Privacy Policy URL */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Политика конфиденциальности (Privacy Policy URL)
-                </label>
-                <input
-                  type="url"
-                  value={privacyPolicyUrl}
-                  onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
-                  onFocus={() => setFocusedField('privacyPolicyUrl')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="https://example.com/privacy"
-                  maxLength={256}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
-                />
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    Ссылка на политику конфиденциальности (отображается в профиле бота)
-                  </p>
-                  <span className={`text-xs ${getCounterColor(privacyPolicyUrl.length, 256)}`}>
-                    {privacyPolicyUrl.length} / 256
-                  </span>
-                </div>
-              </div>
-
-              {/* First Message Section */}
-              <div className="mb-6 pt-6 border-t border-gray-200">
-                <h3 className="text-md font-semibold text-gray-900 mb-4">
-                  First Message (после нажатия START)
+              {/* === БЛОК 4: Диалог (после START) === */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">4</span>
+                  Диалог (после START)
                 </h3>
 
                 {/* First Message Text */}
@@ -492,40 +587,7 @@ function App() {
                   onClick={handleExport}
                   className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
                 >
-                  📦 Скачать архив
-                </button>
-                <button
-                  onClick={async () => {
-                    if (confirm('Очистить все поля формы?')) {
-                      setUsername('');
-                      setBotName('');
-                      setShortDescription('');
-                      setDescription('');
-                      setAbout('');
-                      setPrivacyPolicyUrl('');
-                      setFirstMessageText('');
-                      setInlineButtonText('');
-                      setInlineButtonResponse('');
-                      setAvatarUrl(null);
-                      setAvatarFile(null);
-                      setBotPicUrl(null);
-                      setBotPicFile(null);
-                      setValidationErrors([]);
-
-                      // Удаляем черновик из IndexedDB
-                      if (isIDBSupported) {
-                        try {
-                          await clearDraft();
-                          console.log('Draft cleared from IndexedDB');
-                        } catch (error) {
-                          console.error('Failed to clear draft:', error);
-                        }
-                      }
-                    }
-                  }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                >
-                  🗑️ Очистить
+                  Скачать архив
                 </button>
               </div>
             </div>

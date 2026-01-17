@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface FirstMessageProps {
   botName: string;
@@ -13,8 +13,54 @@ interface FirstMessageProps {
   focusedField?: string | null;
 }
 
+// Получить первую букву (пропуская эмодзи)
+const getInitial = (name: string) => {
+  const match = name.match(/[a-zA-Zа-яА-ЯёЁ]/);
+  return match ? match[0].toUpperCase() : 'B';
+};
+
 export function FirstMessage({ botName, description, text, inlineButton, avatar, botPic, focusedField }: FirstMessageProps) {
   const [buttonClicked, setButtonClicked] = useState(false);
+
+  // Refs для автоскролла
+  const firstMessageRef = useRef<HTMLDivElement>(null);
+  const inlineButtonRef = useRef<HTMLDivElement>(null);
+  const buttonResponseRef = useRef<HTMLDivElement>(null);
+
+  // Автоскролл к элементу при фокусе на поле
+  useEffect(() => {
+    const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
+      if (ref.current) {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    if (focusedField === 'firstMessageText' && firstMessageRef.current) {
+      scrollToRef(firstMessageRef);
+    } else if (focusedField === 'inlineButtonText' && inlineButtonRef.current) {
+      scrollToRef(inlineButtonRef);
+    } else if (focusedField === 'inlineButtonResponse' && buttonResponseRef.current) {
+      scrollToRef(buttonResponseRef);
+    }
+  }, [focusedField]);
+
+  // Автоскролл к ответу после нажатия на кнопку
+  useEffect(() => {
+    if (buttonClicked && buttonResponseRef.current) {
+      setTimeout(() => {
+        buttonResponseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [buttonClicked]);
+
+  // Автоскролл к первому сообщению при монтировании (после нажатия START)
+  useEffect(() => {
+    if (firstMessageRef.current) {
+      setTimeout(() => {
+        firstMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+  }, []);
 
   // Сегодняшняя дата
   const today = new Date();
@@ -29,7 +75,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
           ) : (
-            botName.charAt(0).toUpperCase() || 'B'
+            getInitial(botName)
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -73,7 +119,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 {avatar ? (
                   <img src={avatar} alt={botName} className="w-full h-full object-cover" />
                 ) : (
-                  botName.charAt(0).toUpperCase() || 'B'
+                  getInitial(botName)
                 )}
               </div>
             </div>
@@ -112,13 +158,13 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
         {/* Bot's welcome message (incoming - left side) */}
         {text && (
-          <div className="flex gap-2 mb-3">
+          <div ref={firstMessageRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden">
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
               ) : (
-                botName.charAt(0).toUpperCase() || 'B'
+                getInitial(botName)
               )}
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
@@ -139,7 +185,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
         {/* Inline Button - Telegram style (outside bubble, blurred background) */}
         {text && inlineButton && inlineButton.text && (
-          <div className="flex gap-2 mb-3 ml-10 -mt-2">
+          <div ref={inlineButtonRef} className="flex gap-2 mb-3 ml-10">
             <button
               onClick={() => setButtonClicked(true)}
               className={`flex-1 py-2.5 px-4 text-center text-sm text-white font-medium rounded-xl
@@ -147,7 +193,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 ${buttonClicked
                   ? 'bg-black/15 text-white/70'
                   : 'hover:bg-black/20 cursor-pointer active:scale-[0.98]'
-                } ${focusedField === 'inlineButtonText' ? 'highlight-pulse-border' : ''}`}
+                } ${(focusedField === 'inlineButtonText' || (focusedField === 'inlineButtonResponse' && !buttonClicked)) ? 'highlight-button-pulse' : ''}`}
             >
               {inlineButton.text}
             </button>
@@ -156,13 +202,13 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
         {/* Response to inline button click */}
         {buttonClicked && inlineButton && inlineButton.response && (
-          <div className="flex gap-2 mb-3">
+          <div ref={buttonResponseRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden">
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
               ) : (
-                botName.charAt(0).toUpperCase() || 'B'
+                getInitial(botName)
               )}
             </div>
             <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">

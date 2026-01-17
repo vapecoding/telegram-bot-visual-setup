@@ -5,6 +5,12 @@ interface ChatListItemProps {
   focusedField?: string | null;
 }
 
+// Получить первую букву (пропуская эмодзи)
+const getInitial = (name: string) => {
+  const match = name.match(/[a-zA-Zа-яА-ЯёЁ]/);
+  return match ? match[0].toUpperCase() : 'B';
+};
+
 export function ChatListItem({ botName, shortDescription, avatar, focusedField }: ChatListItemProps) {
   return (
     <div className="bg-white h-full overflow-hidden">
@@ -38,7 +44,7 @@ export function ChatListItem({ botName, shortDescription, avatar, focusedField }
             {avatar ? (
               <img src={avatar} alt={botName} className="w-full h-full object-cover" />
             ) : (
-              botName.charAt(0).toUpperCase() || 'B'
+              getInitial(botName)
             )}
           </div>
 

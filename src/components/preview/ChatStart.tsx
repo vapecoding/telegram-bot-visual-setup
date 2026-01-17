@@ -7,6 +7,12 @@ interface ChatStartProps {
   focusedField?: string | null;
 }
 
+// Получить первую букву (пропуская эмодзи)
+const getInitial = (name: string) => {
+  const match = name.match(/[a-zA-Zа-яА-ЯёЁ]/);
+  return match ? match[0].toUpperCase() : 'B';
+};
+
 export function ChatStart({ botName, description, avatar, botPic, onStartClick, focusedField }: ChatStartProps) {
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full flex flex-col">
@@ -17,7 +23,7 @@ export function ChatStart({ botName, description, avatar, botPic, onStartClick, 
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
           ) : (
-            botName.charAt(0).toUpperCase() || 'B'
+            getInitial(botName)
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -61,7 +67,7 @@ export function ChatStart({ botName, description, avatar, botPic, onStartClick, 
                 {avatar ? (
                   <img src={avatar} alt={botName} className="w-full h-full object-cover" />
                 ) : (
-                  botName.charAt(0).toUpperCase() || 'B'
+                  getInitial(botName)
                 )}
               </div>
             </div>
