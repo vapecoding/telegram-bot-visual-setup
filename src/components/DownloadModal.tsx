@@ -25,6 +25,19 @@ interface ValidationResult {
   warnings: string[];
 }
 
+// Лимиты символов для полей
+const FIELD_LIMITS = {
+  botName: 64,
+  shortDescription: 120,
+  description: 512,
+  about: 120,
+  username: 32,
+  privacyPolicyUrl: 256,
+  firstMessageText: 4096,
+  inlineButtonText: 64,
+  inlineButtonResponse: 4096,
+} as const;
+
 function validateForm(
   formData: DownloadModalProps['formData'],
   avatarError: string | null,
@@ -32,6 +45,44 @@ function validateForm(
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
+
+  // === ПРЕВЫШЕНИЕ ЛИМИТА СИМВОЛОВ (блокируют скачивание) ===
+
+  if (formData.botName.length > FIELD_LIMITS.botName) {
+    errors.push(`Имя бота: ${formData.botName.length}/${FIELD_LIMITS.botName} символов`);
+  }
+
+  if (formData.shortDescription.length > FIELD_LIMITS.shortDescription) {
+    errors.push(`Короткое описание: ${formData.shortDescription.length}/${FIELD_LIMITS.shortDescription} символов`);
+  }
+
+  if (formData.description.length > FIELD_LIMITS.description) {
+    errors.push(`Описание: ${formData.description.length}/${FIELD_LIMITS.description} символов`);
+  }
+
+  if (formData.about.length > FIELD_LIMITS.about) {
+    errors.push(`О боте: ${formData.about.length}/${FIELD_LIMITS.about} символов`);
+  }
+
+  if (formData.username.length > FIELD_LIMITS.username) {
+    errors.push(`Username: ${formData.username.length}/${FIELD_LIMITS.username} символов`);
+  }
+
+  if (formData.privacyPolicyUrl.length > FIELD_LIMITS.privacyPolicyUrl) {
+    errors.push(`Privacy Policy URL: ${formData.privacyPolicyUrl.length}/${FIELD_LIMITS.privacyPolicyUrl} символов`);
+  }
+
+  if (formData.firstMessageText.length > FIELD_LIMITS.firstMessageText) {
+    errors.push(`Первое сообщение: ${formData.firstMessageText.length}/${FIELD_LIMITS.firstMessageText} символов`);
+  }
+
+  if (formData.inlineButtonText.length > FIELD_LIMITS.inlineButtonText) {
+    errors.push(`Inline-кнопка: ${formData.inlineButtonText.length}/${FIELD_LIMITS.inlineButtonText} символов`);
+  }
+
+  if (formData.inlineButtonResponse.length > FIELD_LIMITS.inlineButtonResponse) {
+    errors.push(`Ответ на кнопку: ${formData.inlineButtonResponse.length}/${FIELD_LIMITS.inlineButtonResponse} символов`);
+  }
 
   // === ОБЯЗАТЕЛЬНЫЕ ПОЛЯ (блокируют скачивание) ===
 

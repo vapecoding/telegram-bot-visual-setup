@@ -77,14 +77,8 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
     }
   };
 
-  // Адаптивный размер текста для длинных имён
-  const getNameSizeClass = (name: string) => {
-    const len = name.length;
-    if (len <= 15) return 'text-xl';
-    if (len <= 25) return 'text-lg';
-    if (len <= 35) return 'text-base';
-    return 'text-sm';
-  };
+  // Нужна ли бегущая строка (для длинных имён)
+  const needsMarquee = botName.length > 20;
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm h-full overflow-y-auto">
@@ -119,9 +113,13 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
 
             {/* Name overlay at bottom of avatar */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
-              <p className={`text-white ${getNameSizeClass(botName)} font-semibold drop-shadow-lg truncate`}>
-                {botName || 'Имя бота'}
-              </p>
+              <div className="overflow-hidden whitespace-nowrap">
+                <p className={`text-white text-xl font-semibold drop-shadow-lg ${
+                  needsMarquee ? 'animate-marquee inline-block' : 'truncate'
+                }`}>
+                  {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
+                </p>
+              </div>
               <p className="text-white/80 text-sm drop-shadow">bot</p>
             </div>
           </div>
@@ -182,12 +180,14 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
 
             {/* Bot Name */}
             <div
-              className="px-2 mb-1 preview-editable"
+              className="px-2 mb-1 overflow-hidden whitespace-nowrap preview-editable"
               onMouseEnter={() => onFieldHover?.('botName')}
               onMouseLeave={() => onFieldHover?.(null)}
             >
-              <h2 className={`text-white ${getNameSizeClass(botName)} font-semibold transition-all duration-300 truncate ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
-                {botName || 'Имя бота'}
+              <h2 className={`text-white text-xl font-semibold transition-all duration-300 ${
+                needsMarquee ? 'animate-marquee inline-block' : 'truncate'
+              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
+                {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
               </h2>
             </div>
             <p className="text-white/80 text-sm mb-4">бот</p>

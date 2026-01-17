@@ -618,7 +618,6 @@ function App() {
                     onFocus={() => setInputFocusedField('botName')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Имя бота"
-                    maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(botName.length, 64)} ${previewHoveredField === 'botName' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -640,7 +639,6 @@ function App() {
                     onFocus={() => setInputFocusedField('shortDescription')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Короткое описание"
-                    maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(shortDescription.length, 120)} ${previewHoveredField === 'shortDescription' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -686,7 +684,6 @@ function App() {
                     onFocus={() => setInputFocusedField('about')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="О боте"
-                    maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(about.length, 120)} ${previewHoveredField === 'about' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -713,11 +710,12 @@ function App() {
                       onFocus={() => setInputFocusedField('username')}
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="username_bot"
-                      maxLength={32}
                       className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${
-                        username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
-                          ? 'border-yellow-500 focus:ring-yellow-500'
-                          : 'border-gray-300 focus:ring-blue-500'
+                        username.length > 32
+                          ? 'border-red-500 focus:ring-red-500'
+                          : username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
+                            ? 'border-yellow-500 focus:ring-yellow-500'
+                            : 'border-gray-300 focus:ring-blue-500'
                       } ${previewHoveredField === 'username' ? 'highlight-form-field' : ''}`}
                     />
                   </div>
@@ -740,7 +738,6 @@ function App() {
                     onFocus={() => setInputFocusedField('privacyPolicyUrl')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Privacy Policy URL"
-                    maxLength={256}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(privacyPolicyUrl.length, 256)} ${previewHoveredField === 'privacyPolicyUrl' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -791,7 +788,6 @@ function App() {
                     onFocus={() => setInputFocusedField('description')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Описание"
-                    maxLength={512}
                     rows={2}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(description.length, 512)} ${previewHoveredField === 'description' ? 'highlight-form-field' : ''}`}
                     style={{ minHeight: '60px', overflow: 'hidden' }}
@@ -828,7 +824,6 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Первое сообщение"
                     rows={2}
-                    maxLength={4096}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(firstMessageText.length, 4096)} ${previewHoveredField === 'firstMessageText' ? 'highlight-form-field' : ''}`}
                     style={{ minHeight: '60px', overflow: 'hidden' }}
                   />
@@ -851,7 +846,6 @@ function App() {
                     onFocus={() => setInputFocusedField('inlineButtonText')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Inline-кнопка"
-                    maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonText.length, 64)} ${previewHoveredField === 'inlineButtonText' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -879,7 +873,6 @@ function App() {
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="Ответ на кнопку"
                       rows={2}
-                      maxLength={4096}
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonResponse.length, 4096)} ${previewHoveredField === 'inlineButtonResponse' ? 'highlight-form-field' : ''}`}
                       style={{ minHeight: '60px', overflow: 'hidden' }}
                     />
