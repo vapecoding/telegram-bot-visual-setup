@@ -20,6 +20,7 @@ interface TelegramPhoneProps {
   highlightAvatar?: boolean;
   avatarError?: string | null;
   avatarWarning?: string | null;
+  onFieldHover?: (field: string | null) => void;
   firstMessage?: {
     text: string;
     inlineButton?: {
@@ -60,24 +61,41 @@ export function TelegramPhone({
   highlightAvatar,
   avatarError,
   avatarWarning,
+  onFieldHover,
   firstMessage,
   formData,
   onDownload
 }: TelegramPhoneProps) {
   const [mode, setMode] = useState<PreviewMode>('chatlist');
-  const [dialogStarted, setDialogStarted] = useState(false);
+  const [userClickedStart, setUserClickedStart] = useState(false); // Физический клик по START
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [dialogInteracted, setDialogInteracted] = useState(false); // "Липкое" состояние диалога
+
+  // Поля диалога (после START)
+  const dialogFields = ['firstMessageText', 'inlineButtonText', 'inlineButtonResponse'];
+  const isDialogFieldFocused = dialogFields.includes(focusedField || '');
+
+  // Когда наводим на поля диалога - делаем состояние "липким"
+  useEffect(() => {
+    if (isDialogFieldFocused && !dialogInteracted) {
+      setDialogInteracted(true);
+    }
+  }, [isDialogFieldFocused, dialogInteracted]);
+
+  // Показывать FirstMessage если пользователь нажал START, взаимодействовал с полями диалога, или сейчас hover на поля
+  const showFirstMessage = userClickedStart || dialogInteracted || isDialogFieldFocused;
 
   // Сброс состояния диалога при смене режима
   const handleModeChange = (newMode: PreviewMode) => {
     setMode(newMode);
     if (newMode === 'dialog') {
-      setDialogStarted(false);
+      setUserClickedStart(false);
+      setDialogInteracted(false); // Сброс при переходе в режим диалога
     }
   };
 
   const handleStartClick = () => {
-    setDialogStarted(true);
+    setUserClickedStart(true);
   };
 
   // Автопереключение превью при фокусе на поле
@@ -85,32 +103,26 @@ export function TelegramPhone({
     if (!focusedField) return;
 
     // Маппинг полей на режимы превью
-    const fieldToMode: Record<string, { mode: PreviewMode; needStart?: boolean }> = {
+    const fieldToMode: Record<string, PreviewMode> = {
       // chatlist
-      shortDescription: { mode: 'chatlist' },
+      shortDescription: 'chatlist',
       // avatar - НЕ переключаем, он виден везде
       // profile
-      username: { mode: 'profile' },
-      about: { mode: 'profile' },
-      privacyPolicyUrl: { mode: 'profile' },
-      // dialog (до START)
-      description: { mode: 'dialog' },
-      botPic: { mode: 'dialog' },
-      // dialog (после START)
-      firstMessageText: { mode: 'dialog', needStart: true },
-      inlineButtonText: { mode: 'dialog', needStart: true },
-      inlineButtonResponse: { mode: 'dialog', needStart: true },
+      username: 'profile',
+      about: 'profile',
+      privacyPolicyUrl: 'profile',
+      // dialog
+      description: 'dialog',
+      botPic: 'dialog',
+      firstMessageText: 'dialog',
+      inlineButtonText: 'dialog',
+      inlineButtonResponse: 'dialog',
       // botName видно везде - не переключаем
     };
 
-    const mapping = fieldToMode[focusedField];
-    if (mapping) {
-      setMode(mapping.mode);
-      if (mapping.needStart) {
-        setDialogStarted(true);
-      } else if (mapping.mode === 'dialog') {
-        setDialogStarted(false);
-      }
+    const targetMode = fieldToMode[focusedField];
+    if (targetMode) {
+      setMode(targetMode);
     }
   }, [focusedField]);
 
@@ -126,30 +138,30 @@ export function TelegramPhone({
       >
         <button
           onClick={() => handleModeChange('chatlist')}
-          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
+          className={`px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer ${
             mode === 'chatlist'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              ? 'bg-blue-600 text-white shadow-md btn-mode-active'
+              : 'bg-white text-gray-700 shadow-sm btn-mode-inactive'
           }`}
         >
           📋 Список чатов
         </button>
         <button
           onClick={() => handleModeChange('profile')}
-          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
+          className={`px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer ${
             mode === 'profile'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              ? 'bg-blue-600 text-white shadow-md btn-mode-active'
+              : 'bg-white text-gray-700 shadow-sm btn-mode-inactive'
           }`}
         >
           👤 Профиль
         </button>
         <button
           onClick={() => handleModeChange('dialog')}
-          className={`px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium ${
+          className={`px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer ${
             mode === 'dialog'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+              ? 'bg-blue-600 text-white shadow-md btn-mode-active'
+              : 'bg-white text-gray-700 shadow-sm btn-mode-inactive'
           }`}
         >
           💬 Диалог
@@ -171,7 +183,7 @@ export function TelegramPhone({
         {formData && (
           <button
             onClick={() => setShowDownloadModal(true)}
-            className="px-5 py-4 text-base rounded-xl transition-colors whitespace-nowrap text-left font-medium bg-green-600 text-white hover:bg-green-700 shadow-md"
+            className="px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer bg-green-600 text-white shadow-md active:scale-95 btn-download"
           >
             📦 Скачать архив
           </button>
@@ -196,6 +208,7 @@ export function TelegramPhone({
                 avatar={avatar}
                 highlightAvatar={highlightAvatar}
                 focusedField={focusedField}
+                onFieldHover={onFieldHover}
               />
             )}
 
@@ -208,10 +221,11 @@ export function TelegramPhone({
                 avatar={avatar}
                 highlightAvatar={highlightAvatar}
                 focusedField={focusedField}
+                onFieldHover={onFieldHover}
               />
             )}
 
-            {mode === 'dialog' && !dialogStarted && (
+            {mode === 'dialog' && !showFirstMessage && (
               <ChatStart
                 botName={botName}
                 description={description}
@@ -221,10 +235,11 @@ export function TelegramPhone({
                 showBotPicPlaceholder={showBotPicPlaceholder}
                 onStartClick={handleStartClick}
                 focusedField={focusedField}
+                onFieldHover={onFieldHover}
               />
             )}
 
-            {mode === 'dialog' && dialogStarted && (
+            {mode === 'dialog' && showFirstMessage && (
               <FirstMessage
                 botName={botName}
                 description={description}
@@ -235,6 +250,9 @@ export function TelegramPhone({
                 botPic={botPic}
                 showBotPicPlaceholder={showBotPicPlaceholder}
                 focusedField={focusedField}
+                onFieldHover={onFieldHover}
+                permanentMode={userClickedStart}
+                stickyMode={dialogInteracted}
               />
             )}
           </div>

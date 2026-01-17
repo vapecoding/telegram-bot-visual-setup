@@ -4,6 +4,7 @@ interface ChatListItemProps {
   avatar?: string;
   highlightAvatar?: boolean;
   focusedField?: string | null;
+  onFieldHover?: (field: string | null) => void;
 }
 
 // Получить первую букву (пропуская эмодзи)
@@ -12,7 +13,7 @@ const getInitial = (name: string) => {
   return match ? match[0].toUpperCase() : 'B';
 };
 
-export function ChatListItem({ botName, shortDescription, avatar, highlightAvatar, focusedField }: ChatListItemProps) {
+export function ChatListItem({ botName, shortDescription, avatar, highlightAvatar, focusedField, onFieldHover }: ChatListItemProps) {
   return (
     <div className="bg-white h-full overflow-hidden">
       {/* Telegram Header - не редактируемый */}
@@ -41,9 +42,13 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
         {/* Our Bot Item - HIGHLIGHTED */}
         <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-l-4 border-blue-500 bg-blue-50">
           {/* Avatar */}
-          <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 ${
-            highlightAvatar ? 'highlight-avatar-pulse' : ''
-          }`}>
+          <div
+            className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable ${
+              highlightAvatar ? 'highlight-avatar-pulse' : ''
+            }`}
+            onMouseEnter={() => onFieldHover?.('avatar')}
+            onMouseLeave={() => onFieldHover?.(null)}
+          >
             {avatar ? (
               <img src={avatar} alt={botName} className="w-full h-full object-cover" />
             ) : (
@@ -54,16 +59,24 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
           {/* Content */}
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3 overflow-hidden">
             <div className="flex items-start justify-between mb-1">
-              <h3 className={`font-semibold text-gray-900 truncate flex-1 min-w-0 transition-all duration-300 ${
-                focusedField === 'botName' ? 'highlight-pulse-shadow' : ''
-              }`}>
+              <h3
+                className={`font-semibold text-gray-900 truncate flex-1 min-w-0 transition-all duration-300 preview-editable ${
+                  focusedField === 'botName' ? 'highlight-pulse-shadow' : ''
+                }`}
+                onMouseEnter={() => onFieldHover?.('botName')}
+                onMouseLeave={() => onFieldHover?.(null)}
+              >
                 {botName || 'Имя бота'}
               </h3>
               <span className="text-xs text-gray-500 ml-2 flex-shrink-0">12:34</span>
             </div>
-            <p className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-300 ${
-              focusedField === 'shortDescription' ? 'highlight-pulse-shadow' : ''
-            }`}>
+            <p
+              className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-300 preview-editable ${
+                focusedField === 'shortDescription' ? 'highlight-pulse-shadow' : ''
+              }`}
+              onMouseEnter={() => onFieldHover?.('shortDescription')}
+              onMouseLeave={() => onFieldHover?.(null)}
+            >
               {shortDescription || 'Краткое описание бота...'}
             </p>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { MobileBlocker } from './components/MobileBlocker';
@@ -224,9 +224,25 @@ function App() {
   const [highlightAvatar, setHighlightAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [avatarWarning, setAvatarWarning] = useState<string | null>(null);
+  const [previewHoveredField, setPreviewHoveredField] = useState<string | null>(null);
 
   // Вычисляемое активное поле: hover имеет приоритет, но focus сохраняется при редактировании
   const focusedField = hoveredField || inputFocusedField;
+
+  // Refs для полей формы (для скролла при hover на превью)
+  const fieldRefs = {
+    botName: useRef<HTMLInputElement>(null),
+    shortDescription: useRef<HTMLInputElement>(null),
+    avatar: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLInputElement>(null),
+    username: useRef<HTMLInputElement>(null),
+    privacyPolicyUrl: useRef<HTMLInputElement>(null),
+    description: useRef<HTMLTextAreaElement>(null),
+    botPic: useRef<HTMLDivElement>(null),
+    firstMessageText: useRef<HTMLTextAreaElement>(null),
+    inlineButtonText: useRef<HTMLInputElement>(null),
+    inlineButtonResponse: useRef<HTMLTextAreaElement>(null),
+  };
 
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
@@ -251,6 +267,35 @@ function App() {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showClearConfirm]);
+
+  // Скролл к полю формы при наведении на превью
+  useEffect(() => {
+    if (!previewHoveredField) return;
+
+    const ref = fieldRefs[previewHoveredField as keyof typeof fieldRefs];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [previewHoveredField]);
+
+  // Handler для hover на превью
+  const handlePreviewFieldHover = (field: string | null) => {
+    setPreviewHoveredField(field);
+  };
+
+  // Auto-resize textarea
+  const autoResizeTextarea = useCallback((element: HTMLTextAreaElement | null) => {
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${element.scrollHeight}px`;
+  }, []);
+
+  // Ресайз textarea при изменении данных (например, после восстановления из IndexedDB)
+  useEffect(() => {
+    if (fieldRefs.description.current) autoResizeTextarea(fieldRefs.description.current);
+    if (fieldRefs.firstMessageText.current) autoResizeTextarea(fieldRefs.firstMessageText.current);
+    if (fieldRefs.inlineButtonResponse.current) autoResizeTextarea(fieldRefs.inlineButtonResponse.current);
+  }, [description, firstMessageText, inlineButtonResponse, autoResizeTextarea]);
 
   // Восстановление черновика при загрузке
   useEffect(() => {
@@ -525,13 +570,13 @@ function App() {
                       setAvatarUrl(generateDemoAvatar());
                       setBotPicUrl(generateDemoBotPic());
                     }}
-                    className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg transition-all duration-200 cursor-pointer btn-demo"
                   >
                     Демо-данные
                   </button>
                   <button
                     onClick={() => setShowClearConfirm(true)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="px-3 py-1.5 text-sm border border-gray-300 text-gray-600 rounded-lg transition-all duration-200 cursor-pointer btn-clear"
                   >
                     Очистить
                   </button>
@@ -564,6 +609,7 @@ function App() {
                 {/* Bot Name */}
                 <div className="mb-4">
                   <input
+                    ref={fieldRefs.botName}
                     type="text"
                     value={botName}
                     onChange={(e) => setBotName(e.target.value)}
@@ -573,7 +619,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Имя бота"
                     maxLength={64}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(botName.length, 64)} ${previewHoveredField === 'botName' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(botName.length, 64)}`}>
@@ -585,6 +631,7 @@ function App() {
                 {/* Short Description */}
                 <div className="mb-4">
                   <input
+                    ref={fieldRefs.shortDescription}
                     type="text"
                     value={shortDescription}
                     onChange={(e) => setShortDescription(e.target.value)}
@@ -594,7 +641,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Короткое описание"
                     maxLength={120}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(shortDescription.length, 120)} ${previewHoveredField === 'shortDescription' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(shortDescription.length, 120)}`}>
@@ -604,18 +651,20 @@ function App() {
                 </div>
 
                 {/* Avatar Upload */}
-                <AvatarUpload
-                  avatarUrl={avatarUrl}
-                  onAvatarChange={handleAvatarChange}
-                  onFocus={() => setHighlightAvatar(true)}
-                  onBlur={() => setHighlightAvatar(false)}
-                  onHoverStart={() => setHoveredField('avatar')}
-                  onHoverEnd={() => setHoveredField(null)}
-                  onValidationChange={(err, warn) => {
-                    setAvatarError(err);
-                    setAvatarWarning(warn);
-                  }}
-                />
+                <div ref={fieldRefs.avatar} className={`transition-all duration-300 rounded-lg ${previewHoveredField === 'avatar' ? 'highlight-form-field' : ''}`}>
+                  <AvatarUpload
+                    avatarUrl={avatarUrl}
+                    onAvatarChange={handleAvatarChange}
+                    onFocus={() => setHighlightAvatar(true)}
+                    onBlur={() => setHighlightAvatar(false)}
+                    onHoverStart={() => setHoveredField('avatar')}
+                    onHoverEnd={() => setHoveredField(null)}
+                    onValidationChange={(err, warn) => {
+                      setAvatarError(err);
+                      setAvatarWarning(warn);
+                    }}
+                  />
+                </div>
               </div>
 
               {/* === БЛОК 2: Профиль бота === */}
@@ -628,6 +677,7 @@ function App() {
                 {/* About */}
                 <div className="mb-4">
                   <input
+                    ref={fieldRefs.about}
                     type="text"
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
@@ -637,7 +687,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="О боте"
                     maxLength={120}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(about.length, 120)} ${previewHoveredField === 'about' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(about.length, 120)}`}>
@@ -651,6 +701,7 @@ function App() {
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
                     <input
+                      ref={fieldRefs.username}
                       type="text"
                       value={username}
                       onChange={(e) => {
@@ -663,11 +714,11 @@ function App() {
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="username_bot"
                       maxLength={32}
-                      className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
+                      className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${
                         username.length > 0 && (username.length < 5 || !username.toLowerCase().endsWith('bot'))
                           ? 'border-yellow-500 focus:ring-yellow-500'
                           : 'border-gray-300 focus:ring-blue-500'
-                      }`}
+                      } ${previewHoveredField === 'username' ? 'highlight-form-field' : ''}`}
                     />
                   </div>
                   <div className="flex justify-end mt-1">
@@ -680,6 +731,7 @@ function App() {
                 {/* Privacy Policy URL */}
                 <div className="mb-4">
                   <input
+                    ref={fieldRefs.privacyPolicyUrl}
                     type="url"
                     value={privacyPolicyUrl}
                     onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
@@ -689,7 +741,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Privacy Policy URL"
                     maxLength={256}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(privacyPolicyUrl.length, 256)} ${previewHoveredField === 'privacyPolicyUrl' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(privacyPolicyUrl.length, 256)}`}>
@@ -707,33 +759,42 @@ function App() {
                 </h3>
 
                 {/* Description Picture Upload */}
-                <BotPicUpload
-                  botPicUrl={botPicUrl}
-                  onBotPicChange={handleBotPicChange}
-                  onFocus={() => setInputFocusedField('botPic')}
-                  onHoverStart={() => {
-                    setHoveredField('botPic');
-                    setShowBotPicPlaceholder(true);
-                  }}
-                  onHoverEnd={() => {
-                    setHoveredField(null);
-                    setShowBotPicPlaceholder(false);
-                  }}
-                />
+                <div ref={fieldRefs.botPic} className={`transition-all duration-300 rounded-lg ${previewHoveredField === 'botPic' ? 'highlight-form-field' : ''}`}>
+                  <BotPicUpload
+                    botPicUrl={botPicUrl}
+                    onBotPicChange={handleBotPicChange}
+                    onFocus={() => setInputFocusedField('botPic')}
+                    onHoverStart={() => {
+                      setHoveredField('botPic');
+                      setShowBotPicPlaceholder(true);
+                    }}
+                    onHoverEnd={() => {
+                      setHoveredField(null);
+                      setShowBotPicPlaceholder(false);
+                    }}
+                  />
+                </div>
 
                 {/* Description */}
                 <div className="mb-4">
                   <textarea
+                    ref={(el) => {
+                      (fieldRefs.description as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+                    }}
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      autoResizeTextarea(e.target);
+                    }}
                     onMouseEnter={() => setHoveredField('description')}
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('description')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Описание"
                     maxLength={512}
-                    rows={5}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(description.length, 512)}`}
+                    rows={2}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(description.length, 512)} ${previewHoveredField === 'description' ? 'highlight-form-field' : ''}`}
+                    style={{ minHeight: '60px', overflow: 'hidden' }}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(description.length, 512)}`}>
@@ -753,16 +814,23 @@ function App() {
                 {/* First Message Text */}
                 <div className="mb-4">
                   <textarea
+                    ref={(el) => {
+                      (fieldRefs.firstMessageText as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+                    }}
                     value={firstMessageText}
-                    onChange={(e) => setFirstMessageText(e.target.value)}
+                    onChange={(e) => {
+                      setFirstMessageText(e.target.value);
+                      autoResizeTextarea(e.target);
+                    }}
                     onMouseEnter={() => setHoveredField('firstMessageText')}
                     onMouseLeave={() => setHoveredField(null)}
                     onFocus={() => setInputFocusedField('firstMessageText')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Первое сообщение"
-                    rows={3}
+                    rows={2}
                     maxLength={4096}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(firstMessageText.length, 4096)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(firstMessageText.length, 4096)} ${previewHoveredField === 'firstMessageText' ? 'highlight-form-field' : ''}`}
+                    style={{ minHeight: '60px', overflow: 'hidden' }}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(firstMessageText.length, 4096)}`}>
@@ -774,6 +842,7 @@ function App() {
                 {/* Inline Button Text */}
                 <div className="mb-4">
                   <input
+                    ref={fieldRefs.inlineButtonText}
                     type="text"
                     value={inlineButtonText}
                     onChange={(e) => setInlineButtonText(e.target.value)}
@@ -783,7 +852,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Inline-кнопка"
                     maxLength={64}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(inlineButtonText.length, 64)}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonText.length, 64)} ${previewHoveredField === 'inlineButtonText' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
                     <span className={`text-xs ${getCounterColor(inlineButtonText.length, 64)}`}>
@@ -796,16 +865,23 @@ function App() {
                 {inlineButtonText && (
                   <div className="mb-4">
                     <textarea
+                      ref={(el) => {
+                        (fieldRefs.inlineButtonResponse as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+                      }}
                       value={inlineButtonResponse}
-                      onChange={(e) => setInlineButtonResponse(e.target.value)}
+                      onChange={(e) => {
+                        setInlineButtonResponse(e.target.value);
+                        autoResizeTextarea(e.target);
+                      }}
                       onMouseEnter={() => setHoveredField('inlineButtonResponse')}
                       onMouseLeave={() => setHoveredField(null)}
                       onFocus={() => setInputFocusedField('inlineButtonResponse')}
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="Ответ на кнопку"
-                      rows={3}
+                      rows={2}
                       maxLength={4096}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none ${getInputBorderClass(inlineButtonResponse.length, 4096)}`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonResponse.length, 4096)} ${previewHoveredField === 'inlineButtonResponse' ? 'highlight-form-field' : ''}`}
+                      style={{ minHeight: '60px', overflow: 'hidden' }}
                     />
                     <div className="flex justify-end mt-1">
                       <span className={`text-xs ${getCounterColor(inlineButtonResponse.length, 4096)}`}>
@@ -835,6 +911,7 @@ function App() {
                   highlightAvatar={highlightAvatar}
                   avatarError={avatarError}
                   avatarWarning={avatarWarning}
+                  onFieldHover={handlePreviewFieldHover}
                   firstMessage={
                     firstMessageText
                       ? {

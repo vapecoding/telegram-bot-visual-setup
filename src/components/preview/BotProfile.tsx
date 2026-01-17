@@ -8,6 +8,7 @@ interface BotProfileProps {
   avatar?: string;
   highlightAvatar?: boolean;
   focusedField?: string | null;
+  onFieldHover?: (field: string | null) => void;
 }
 
 // Получить первую букву (пропуская эмодзи)
@@ -67,7 +68,7 @@ const renderTextWithLinks = (text: string) => {
   });
 };
 
-export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField }: BotProfileProps) {
+export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField, onFieldHover }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   const handleAvatarClick = () => {
@@ -165,10 +166,12 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             {/* Avatar */}
             <div
               onClick={handleAvatarClick}
-              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden transition-all duration-300 ${
+              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden transition-all duration-300 preview-editable ${
                 avatar ? 'cursor-pointer hover:opacity-80' : ''
               } ${highlightAvatar ? 'highlight-avatar-pulse' : ''}`}
               title={avatar ? 'Нажмите для просмотра в полном размере' : ''}
+              onMouseEnter={() => onFieldHover?.('avatar')}
+              onMouseLeave={() => onFieldHover?.(null)}
             >
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -178,7 +181,11 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             </div>
 
             {/* Bot Name */}
-            <div className="px-2 mb-1">
+            <div
+              className="px-2 mb-1 preview-editable"
+              onMouseEnter={() => onFieldHover?.('botName')}
+              onMouseLeave={() => onFieldHover?.(null)}
+            >
               <h2 className={`text-white ${getNameSizeClass(botName)} font-semibold transition-all duration-300 truncate ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
                 {botName || 'Имя бота'}
               </h2>
@@ -209,7 +216,11 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       )}
 
       {/* About Section */}
-      <div className="px-4 py-3 border-b border-gray-200">
+      <div
+        className="px-4 py-3 border-b border-gray-200 preview-editable"
+        onMouseEnter={() => onFieldHover?.('about')}
+        onMouseLeave={() => onFieldHover?.(null)}
+      >
         <p className={`text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
           focusedField === 'about' ? 'highlight-pulse-shadow' : ''
         }`}>
@@ -219,7 +230,11 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       </div>
 
       {/* Username */}
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+      <div
+        className="px-4 py-3 border-b border-gray-200 flex items-center justify-between preview-editable"
+        onMouseEnter={() => onFieldHover?.('username')}
+        onMouseLeave={() => onFieldHover?.(null)}
+      >
         <div>
           <p className={`text-blue-600 transition-all duration-300 rounded px-1 -mx-1 ${
             focusedField === 'username' ? 'highlight-pulse-shadow' : ''
@@ -233,7 +248,11 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
 
       {/* Privacy Policy */}
       {privacyPolicyUrl && (
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div
+          className="px-4 py-3 border-b border-gray-200 preview-editable"
+          onMouseEnter={() => onFieldHover?.('privacyPolicyUrl')}
+          onMouseLeave={() => onFieldHover?.(null)}
+        >
           <a
             href={privacyPolicyUrl}
             target="_blank"

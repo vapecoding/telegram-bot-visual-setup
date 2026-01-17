@@ -177,12 +177,12 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
           onMouseEnter={onHoverStart}
           onMouseLeave={onHoverEnd}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200 upload-zone
             ${isDragging
               ? 'border-blue-500 bg-blue-50'
               : error
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                : 'border-gray-300'
             }
           `}
         >
@@ -205,7 +205,7 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
           onClick={onFocus}
           onMouseEnter={onHoverStart}
           onMouseLeave={onHoverEnd}
-          className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-300"
+          className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer transition-all duration-200 upload-preview"
         >
           <div className="flex items-start gap-4">
             {/* BotPic Preview */}
@@ -238,7 +238,7 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
                 e.stopPropagation();
                 handleRemove();
               }}
-              className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+              className="px-3 py-1.5 text-sm text-red-600 rounded cursor-pointer transition-all duration-200 btn-delete"
             >
               🗑️ Удалить
             </button>

@@ -136,3 +136,104 @@
     transform: translateX(-50%);
   }
 }
+
+/* Effect 7: Form field highlight when hovering preview (reverse direction) */
+.highlight-form-field {
+  animation: form-field-pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+@keyframes form-field-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 12px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.8), 0 0 20px rgba(99, 102, 241, 0.5);
+  }
+}
+
+/* Cursor pointer for editable preview elements */
+.preview-editable {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.preview-editable:hover {
+  opacity: 0.85;
+}
+
+/* Workaround for Tailwind v4 CSS nesting issue with hover */
+/* Mode switcher buttons */
+.btn-mode-inactive:hover {
+  background-color: #dbeafe !important; /* blue-100 */
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important; /* shadow-lg */
+  transform: scale(1.05) !important;
+}
+
+.btn-mode-active:hover {
+  background-color: #3b82f6 !important; /* blue-500 */
+}
+
+/* Download button */
+.btn-download:hover {
+  background-color: #22c55e !important; /* green-500 */
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important; /* shadow-xl */
+  transform: scale(1.05) !important;
+}
+
+/* START button */
+.btn-start:hover {
+  background-color: #4a7db0 !important;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important; /* shadow-2xl */
+  transform: scale(1.1) !important;
+}
+
+/* Demo button */
+.btn-demo:hover {
+  background-color: #eff6ff !important; /* blue-50 */
+  border-color: #60a5fa !important; /* blue-400 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; /* shadow-md */
+  transform: scale(1.03) !important;
+}
+
+/* Clear button */
+.btn-clear:hover {
+  background-color: #f3f4f6 !important; /* gray-100 */
+  border-color: #9ca3af !important; /* gray-400 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; /* shadow-md */
+  transform: scale(1.03) !important;
+}
+
+/* Form input/textarea hover */
+.form-input:hover {
+  border-color: #60a5fa !important; /* blue-400 */
+  background-color: #eff6ff !important; /* blue-50 */
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
+}
+
+/* Image upload zone hover */
+.upload-zone:hover {
+  border-color: #60a5fa !important; /* blue-400 */
+  background-color: #eff6ff !important; /* blue-50 */
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2) !important;
+}
+
+/* Image preview zone hover */
+.upload-preview:hover {
+  border-color: #60a5fa !important; /* blue-400 */
+  background-color: #f8fafc !important; /* slate-50 */
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
+}
+
+/* Delete button in upload zones */
+.btn-delete:hover {
+  background-color: #fef2f2 !important; /* red-50 */
+  color: #dc2626 !important; /* red-600 */
+  transform: scale(1.05) !important;
+}
+
+/* Link hover in upload zones */
+.link-preview:hover {
+  color: #2563eb !important; /* blue-600 */
+  text-decoration: underline !important;
+}

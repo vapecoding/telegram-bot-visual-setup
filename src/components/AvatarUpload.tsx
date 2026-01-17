@@ -241,12 +241,12 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
           onMouseEnter={() => { onFocus?.(); onHoverStart?.(); }}
           onMouseLeave={() => { onBlur?.(); onHoverEnd?.(); }}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200 upload-zone
             ${isDragging
               ? 'border-blue-500 bg-blue-50'
               : error
                 ? 'border-red-300 bg-red-50'
-                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                : 'border-gray-300'
             }
           `}
         >
@@ -269,7 +269,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
           onClick={onFocus}
           onMouseEnter={() => { onFocus?.(); onHoverStart?.(); }}
           onMouseLeave={() => { onBlur?.(); onHoverEnd?.(); }}
-          className={`border-2 rounded-lg p-4 cursor-pointer hover:border-blue-300 ${
+          className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 upload-preview ${
             warning
               ? 'border-yellow-400 bg-yellow-50'
               : 'border-gray-300'
@@ -308,7 +308,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
-                className="text-xs text-blue-600 hover:underline mt-2"
+                className="text-xs text-blue-600 mt-2 cursor-pointer transition-all duration-200 link-preview"
               >
                 🔍 Открыть в полном размере
               </button>
@@ -317,7 +317,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
             {/* Remove Button */}
             <button
               onClick={(e) => { e.stopPropagation(); handleRemove(); }}
-              className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+              className="px-3 py-1.5 text-sm text-red-600 rounded cursor-pointer transition-all duration-200 btn-delete"
             >
               🗑️ Удалить
             </button>
