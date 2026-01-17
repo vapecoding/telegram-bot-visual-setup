@@ -3,6 +3,7 @@ import { MobileBlocker } from './components/MobileBlocker';
 import { TelegramPhone } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
 import { BotPicUpload } from './components/BotPicUpload';
+import { ToastContainer, useToast } from './components/Toast';
 import { validateBotSettings } from './schemas/botSettings';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 
@@ -197,7 +198,11 @@ function App() {
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
   const [isIDBSupported] = useState(isIndexedDBSupported());
+  const [hasShownSaveToast, setHasShownSaveToast] = useState(false); // Для показа toast только один раз
   const saveTimeoutRef = useRef<number | null>(null);
+
+  // Toast уведомления
+  const { toasts, dismissToast, showSuccess, showWarning } = useToast();
 
   // Закрытие модального окна по ESC
   useEffect(() => {
@@ -213,8 +218,17 @@ function App() {
   // Восстановление черновика при загрузке
   useEffect(() => {
     async function hydrate() {
+      // Показываем предупреждение если IndexedDB недоступен
       if (!isIDBSupported) {
         setIsHydrating(false);
+        // Небольшая задержка чтобы toast появился после рендера
+        setTimeout(() => {
+          showWarning(
+            'Автосохранение недоступно',
+            'Скачайте архив после заполнения, чтобы не потерять данные',
+            6000
+          );
+        }, 500);
         return;
       }
 
@@ -243,6 +257,7 @@ function App() {
     }
 
     hydrate();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIDBSupported]);
 
   // Автосохранение черновика (debounced, 2 секунды)
@@ -258,7 +273,7 @@ function App() {
     }
 
     // Устанавливаем новый таймер
-    saveTimeoutRef.current = window.setTimeout(() => {
+    saveTimeoutRef.current = window.setTimeout(async () => {
       const draft = {
         username,
         botName,
@@ -274,9 +289,20 @@ function App() {
         savedAt: Date.now()
       };
 
-      saveDraft(draft).catch((error) => {
+      try {
+        await saveDraft(draft);
+
+        // Показываем toast только при первом сохранении
+        if (!hasShownSaveToast) {
+          setHasShownSaveToast(true);
+          showSuccess(
+            'Черновик сохранён',
+            'Данные автоматически сохраняются в браузере'
+          );
+        }
+      } catch (error) {
         console.error('Failed to save draft:', error);
-      });
+      }
     }, 2000);
 
     // Cleanup
@@ -285,6 +311,7 @@ function App() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     username,
     botName,
@@ -298,7 +325,8 @@ function App() {
     avatarUrl,
     botPicUrl,
     isHydrating,
-    isIDBSupported
+    isIDBSupported,
+    hasShownSaveToast
   ]);
 
   // Handler для изменения аватара
@@ -839,6 +867,9 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Toast уведомления */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </>
   );
 }
