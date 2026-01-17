@@ -192,10 +192,14 @@ function App() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [botPicUrl, setBotPicUrl] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Array<{ field: string; message: string }>>([]);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [hoveredField, setHoveredField] = useState<string | null>(null);
+  const [inputFocusedField, setInputFocusedField] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showBotPicPlaceholder, setShowBotPicPlaceholder] = useState(false);
   const [highlightAvatar, setHighlightAvatar] = useState(false);
+
+  // Вычисляемое активное поле: hover имеет приоритет, но focus сохраняется при редактировании
+  const focusedField = hoveredField || inputFocusedField;
 
   // IndexedDB состояния
   const [isHydrating, setIsHydrating] = useState(true); // Защита от race condition
@@ -518,8 +522,10 @@ function App() {
                     type="text"
                     value={botName}
                     onChange={(e) => setBotName(e.target.value)}
-                    onFocus={() => setFocusedField('botName')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('botName')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('botName')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Отображаемое имя в чатах и профиле"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(botName.length, 64)}`}
@@ -540,8 +546,10 @@ function App() {
                     type="text"
                     value={shortDescription}
                     onChange={(e) => setShortDescription(e.target.value)}
-                    onFocus={() => setFocusedField('shortDescription')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('shortDescription')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('shortDescription')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Текст в списке контактов и ссылке t.me/botname"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(shortDescription.length, 120)}`}
@@ -578,8 +586,10 @@ function App() {
                     type="text"
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
-                    onFocus={() => setFocusedField('about')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('about')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('about')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Краткое описание в профиле бота"
                     maxLength={120}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(about.length, 120)}`}
@@ -609,8 +619,10 @@ function App() {
                         const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                         setUsername(value);
                       }}
-                      onFocus={() => setFocusedField('username')}
-                      onBlur={() => setFocusedField(null)}
+                      onMouseEnter={() => setHoveredField('username')}
+                      onMouseLeave={() => setHoveredField(null)}
+                      onFocus={() => setInputFocusedField('username')}
+                      onBlur={() => setInputFocusedField(null)}
                       placeholder="Уникальный адрес бота"
                       maxLength={32}
                       className={`w-full pl-8 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${
@@ -639,8 +651,10 @@ function App() {
                     type="url"
                     value={privacyPolicyUrl}
                     onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
-                    onFocus={() => setFocusedField('privacyPolicyUrl')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('privacyPolicyUrl')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('privacyPolicyUrl')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="https://example.com/privacy"
                     maxLength={256}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(privacyPolicyUrl.length, 256)}`}
@@ -664,13 +678,13 @@ function App() {
                 <BotPicUpload
                   botPicUrl={botPicUrl}
                   onBotPicChange={handleBotPicChange}
-                  onFocus={() => setFocusedField('botPic')}
+                  onFocus={() => setInputFocusedField('botPic')}
                   onHoverStart={() => {
-                    setFocusedField('botPic');
+                    setHoveredField('botPic');
                     setShowBotPicPlaceholder(true);
                   }}
                   onHoverEnd={() => {
-                    setFocusedField(null);
+                    setHoveredField(null);
                     setShowBotPicPlaceholder(false);
                   }}
                 />
@@ -683,8 +697,10 @@ function App() {
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    onFocus={() => setFocusedField('description')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('description')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('description')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Текст в разделе «Что умеет этот бот?»"
                     maxLength={512}
                     rows={6}
@@ -713,8 +729,10 @@ function App() {
                   <textarea
                     value={firstMessageText}
                     onChange={(e) => setFirstMessageText(e.target.value)}
-                    onFocus={() => setFocusedField('firstMessageText')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('firstMessageText')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('firstMessageText')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Сообщение бота после нажатия START"
                     rows={4}
                     maxLength={4096}
@@ -736,8 +754,10 @@ function App() {
                     type="text"
                     value={inlineButtonText}
                     onChange={(e) => setInlineButtonText(e.target.value)}
-                    onFocus={() => setFocusedField('inlineButtonText')}
-                    onBlur={() => setFocusedField(null)}
+                    onMouseEnter={() => setHoveredField('inlineButtonText')}
+                    onMouseLeave={() => setHoveredField(null)}
+                    onFocus={() => setInputFocusedField('inlineButtonText')}
+                    onBlur={() => setInputFocusedField(null)}
                     placeholder="Кнопка под сообщением"
                     maxLength={64}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none ${getInputBorderClass(inlineButtonText.length, 64)}`}
@@ -758,8 +778,10 @@ function App() {
                     <textarea
                       value={inlineButtonResponse}
                       onChange={(e) => setInlineButtonResponse(e.target.value)}
-                      onFocus={() => setFocusedField('inlineButtonResponse')}
-                      onBlur={() => setFocusedField(null)}
+                      onMouseEnter={() => setHoveredField('inlineButtonResponse')}
+                      onMouseLeave={() => setHoveredField(null)}
+                      onFocus={() => setInputFocusedField('inlineButtonResponse')}
+                      onBlur={() => setInputFocusedField(null)}
                       placeholder="Ответ бота при нажатии на кнопку"
                       rows={3}
                       maxLength={4096}

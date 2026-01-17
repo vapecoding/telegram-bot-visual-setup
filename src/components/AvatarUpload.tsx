@@ -258,6 +258,8 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur }: Ava
         /* Preview Zone */
         <div
           onClick={onFocus}
+          onMouseEnter={onFocus}
+          onMouseLeave={onBlur}
           className={`border-2 rounded-lg p-4 cursor-pointer hover:border-blue-300 ${
             warning
               ? 'border-yellow-400 bg-yellow-50'

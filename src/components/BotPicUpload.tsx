@@ -188,6 +188,8 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
         /* Preview Zone */
         <div
           onClick={onFocus}
+          onMouseEnter={onHoverStart}
+          onMouseLeave={onHoverEnd}
           className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-300"
         >
           <div className="flex items-start gap-4">

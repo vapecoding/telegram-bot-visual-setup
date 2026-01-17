@@ -216,15 +216,15 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 ${buttonClicked
                   ? 'bg-black/15 text-white/70'
                   : 'hover:bg-black/20 cursor-pointer active:scale-[0.98]'
-                } ${(focusedField === 'inlineButtonText' || (focusedField === 'inlineButtonResponse' && !buttonClicked)) ? 'highlight-button-pulse' : ''}`}
+                } ${focusedField === 'inlineButtonText' ? 'highlight-button-pulse' : ''}`}
             >
               {inlineButton.text}
             </button>
           </div>
         )}
 
-        {/* Response to inline button click */}
-        {buttonClicked && inlineButton && inlineButton.response && (
+        {/* Response to inline button click (or when editing response field) */}
+        {(buttonClicked || focusedField === 'inlineButtonResponse') && inlineButton && inlineButton.response && (
           <div ref={buttonResponseRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden transition-all duration-300 ${
