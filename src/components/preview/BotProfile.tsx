@@ -176,11 +176,13 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             </div>
 
             {/* Bot Name */}
-            <h2 className={`text-white text-xl font-semibold mb-1 truncate px-2 transition-all duration-300 ${
-              focusedField === 'botName' ? 'highlight-pulse-light' : ''
-            }`}>
-              {botName || 'Имя бота'}
-            </h2>
+            <div className="overflow-hidden whitespace-nowrap px-2 mb-1">
+              <h2 className={`text-white text-xl font-semibold transition-all duration-300 ${
+                needsMarquee ? 'animate-marquee inline-block' : 'truncate'
+              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
+                {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
+              </h2>
+            </div>
             <p className="text-white/80 text-sm mb-4">бот</p>
 
             {/* Action Buttons - на синем фоне как в Telegram */}
