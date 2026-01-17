@@ -518,13 +518,27 @@ function App() {
 
       <div className="min-h-screen bg-gray-50 hidden lg:block">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-3 flex items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900">
-            Telegram Bot Settings Viewer
-          </h1>
-          <span className="text-sm text-gray-500">
-            — заполните настройки и проверьте превью
-          </span>
+        <header className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold text-gray-900">
+              Telegram Bot Settings Viewer
+            </h1>
+            <span className="text-sm text-gray-500">
+              — заполните настройки и проверьте превью
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>Автор: Андрей Погорелый</span>
+            <span>•</span>
+            <a
+              href="https://t.me/+vZVUCYuga3plNjYy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              @toolatetolearn
+            </a>
+          </div>
         </header>
 
         {/* Main Layout: Two Columns */}
