@@ -9,8 +9,22 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Cloudflare Web Analytics -->
-    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ace5c0da191a4319bf00ce3c5c549b05"}'></script>
-    <!-- End Cloudflare Web Analytics -->
+    <!-- Redirect from Cloudflare Pages to custom domain -->
+    <script>
+      if (location.hostname.includes('pages.dev')) {
+        location.replace('https://tgvisual.ru/');
+      }
+    </script>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106321267', 'ym');
+      ym(106321267, 'init', {webvisor:true, clickmap:true, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/106321267" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
   </body>
 </html>
