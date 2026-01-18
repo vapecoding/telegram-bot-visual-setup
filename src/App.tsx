@@ -554,7 +554,7 @@ function App() {
                   <button
                     onClick={() => {
                       // Демо-данные для всех полей
-                      setUsername('conf_assistant_bot');
+                      setUsername('example_bot_name');
                       setBotName('Ассистент Конференции');
                       setShortDescription('Помощник участника конференции');
                       setDescription(`Добро пожаловать!
@@ -566,7 +566,7 @@ function App() {
 ❓ Ответить на частые вопросы
 
 Выберите нужный раздел в меню или напишите вопрос`);
-                      setAbout('Официальный бот конференции · t.me/demo_conf_bot');
+                      setAbout('Официальный бот конференции · t.me/example_bot_name');
                       setPrivacyPolicyUrl('https://example.com/privacy');
                       setFirstMessageText(`Добро пожаловать!
 
