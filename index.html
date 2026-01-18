@@ -9,10 +9,52 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Redirect from Cloudflare Pages to custom domain -->
+    <!-- Redirect page for Cloudflare Pages visitors -->
+    <div id="redirect-notice" style="display:none; position:fixed; inset:0; background:white; z-index:9999; font-family:system-ui,-apple-system,sans-serif;">
+      <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+        <div style="text-align:center; max-width:400px;">
+          <h1 style="font-size:1.5rem; font-weight:bold; color:#111827; margin-bottom:0.5rem;">
+            Проект переехал
+          </h1>
+          <p style="color:#6b7280; margin-bottom:1.5rem;">
+            Telegram Bot Visual Setup теперь доступен по новому адресу
+          </p>
+
+          <div style="font-size:4rem; margin-bottom:1rem;">🚚</div>
+
+          <a href="https://tgvisual.ru/" style="display:inline-block; background:#2563eb; color:white; padding:0.75rem 1.5rem; border-radius:0.5rem; text-decoration:none; font-weight:500; margin-bottom:1rem;">
+            tgvisual.ru
+          </a>
+
+          <p style="color:#9ca3af; font-size:0.875rem; margin-top:1.5rem;">
+            Автоматический переход через <span id="countdown">5</span> сек...
+          </p>
+
+          <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #e5e7eb;">
+            <p style="color:#9ca3af; font-size:0.75rem;">
+              Зеркало:
+              <a href="https://vapecoding.github.io/TGBotSettingsViewer/" style="color:#6b7280; text-decoration:underline;">
+                GitHub Pages
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
       if (location.hostname.includes('pages.dev')) {
-        location.replace('https://tgvisual.ru/');
+        document.getElementById('root').style.display = 'none';
+        document.getElementById('redirect-notice').style.display = 'block';
+        var seconds = 5;
+        var countdownEl = document.getElementById('countdown');
+        var timer = setInterval(function() {
+          seconds--;
+          countdownEl.textContent = seconds;
+          if (seconds <= 0) {
+            clearInterval(timer);
+            location.replace('https://tgvisual.ru/');
+          }
+        }, 1000);
       }
     </script>
     <!-- Yandex.Metrika counter -->
