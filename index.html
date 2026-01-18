@@ -9,14 +9,32 @@
   <body>
     <div id="root">
       <!-- Fallback while React loads (will be replaced on mount) -->
-      <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui,-apple-system,sans-serif;">
-        <div style="text-align:center;">
-          <div style="width:40px; height:40px; border:3px solid #e5e7eb; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 1rem;"></div>
-          <p style="color:#6b7280;">Загрузка...</p>
+      <div id="loading-fallback" style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui,-apple-system,sans-serif;">
+        <div style="text-align:center; max-width:400px; padding:2rem;">
+          <div id="loading-spinner" style="width:40px; height:40px; border:3px solid #e5e7eb; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 1rem;"></div>
+          <p id="loading-text" style="color:#6b7280;">Загрузка...</p>
+          <div id="loading-error" style="display:none;">
+            <div style="font-size:3rem; margin-bottom:1rem;">😵</div>
+            <h2 style="font-size:1.25rem; font-weight:bold; color:#111827; margin-bottom:0.5rem;">Что-то пошло не так</h2>
+            <p style="color:#6b7280; margin-bottom:1rem;">Приложение не загрузилось. Попробуйте обновить страницу.</p>
+            <p style="color:#9ca3af; font-size:0.875rem;">Если проблема повторяется, напишите:</p>
+            <a href="https://t.me/+vZVUCYuga3plNjYy" target="_blank" style="display:inline-block; margin-top:0.5rem; color:#2563eb; text-decoration:underline;">@toolatetolearn</a>
+          </div>
         </div>
       </div>
       <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
     </div>
+    <script>
+      // Timeout: if app doesn't load in 10s, show error
+      setTimeout(function() {
+        var fallback = document.getElementById('loading-fallback');
+        if (fallback) {
+          document.getElementById('loading-spinner').style.display = 'none';
+          document.getElementById('loading-text').style.display = 'none';
+          document.getElementById('loading-error').style.display = 'block';
+        }
+      }, 10000);
+    </script>
     <noscript>
       <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui,-apple-system,sans-serif; padding:2rem;">
         <div style="text-align:center; max-width:400px;">
