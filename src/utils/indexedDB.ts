@@ -8,6 +8,11 @@ const DB_VERSION = 1;
 const STORE_NAME = 'drafts';
 const DRAFT_KEY = 'currentDraft';
 
+// Версия приложения - при изменении старые черновики будут сброшены
+// Обновляй при breaking changes в структуре данных
+const APP_VERSION = '0.1.0';
+const VERSION_KEY = 'app_version';
+
 /**
  * Типы данных для черновика
  */
@@ -26,6 +31,29 @@ export interface DraftData {
   botPicUrl: string | null;
   // Метаданные
   savedAt: number; // timestamp
+}
+
+/**
+ * Проверка версии приложения и очистка storage при несовпадении
+ * Возвращает true если версия изменилась (и storage был очищен)
+ */
+function checkVersionAndClearIfNeeded(): boolean {
+  try {
+    const storedVersion = localStorage.getItem(VERSION_KEY);
+
+    if (storedVersion !== APP_VERSION) {
+      // Версия изменилась — удаляем всю базу IndexedDB
+      if (typeof window !== 'undefined' && 'indexedDB' in window) {
+        window.indexedDB.deleteDatabase(DB_NAME);
+      }
+      localStorage.setItem(VERSION_KEY, APP_VERSION);
+      console.log(`App version changed: ${storedVersion} → ${APP_VERSION}, storage cleared`);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -80,6 +108,9 @@ export async function saveDraft(data: DraftData): Promise<void> {
     return;
   }
 
+  // Убеждаемся что версия записана (и очищаем старые данные если нужно)
+  checkVersionAndClearIfNeeded();
+
   try {
     const db = await initDB();
 
@@ -113,6 +144,11 @@ export async function saveDraft(data: DraftData): Promise<void> {
  */
 export async function loadDraft(): Promise<DraftData | null> {
   if (!isIndexedDBSupported()) {
+    return null;
+  }
+
+  // Проверяем версию — если изменилась, storage уже очищен
+  if (checkVersionAndClearIfNeeded()) {
     return null;
   }
 
