@@ -329,17 +329,34 @@ function App() {
           setAvatarUrl(draft.avatarUrl);
           setBotPicUrl(draft.botPicUrl);
 
-          // Toast о восстановлении черновика + блокируем будущий toast сохранения
-          setHasShownSaveToast(true);
-          // Защита от двойного вызова в StrictMode
-          if (!hasShownRestoreToastRef.current) {
-            hasShownRestoreToastRef.current = true;
-            setTimeout(() => {
-              showInfo(
-                'Черновик восстановлен',
-                'Данные загружены из браузера'
-              );
-            }, 300);
+          // Проверяем, есть ли реальный контент в черновике
+          const hasMeaningfulContent = Boolean(
+            draft.username ||
+            draft.botName ||
+            draft.shortDescription ||
+            draft.description ||
+            draft.about ||
+            draft.privacyPolicyUrl ||
+            draft.firstMessageText ||
+            draft.inlineButtonText ||
+            draft.inlineButtonResponse ||
+            draft.avatarUrl ||
+            draft.botPicUrl
+          );
+
+          // Toast о восстановлении черновика только если есть контент
+          if (hasMeaningfulContent) {
+            setHasShownSaveToast(true);
+            // Защита от двойного вызова в StrictMode
+            if (!hasShownRestoreToastRef.current) {
+              hasShownRestoreToastRef.current = true;
+              setTimeout(() => {
+                showInfo(
+                  'Черновик восстановлен',
+                  'Данные загружены из браузера'
+                );
+              }, 300);
+            }
           }
         }
       } catch (error) {
