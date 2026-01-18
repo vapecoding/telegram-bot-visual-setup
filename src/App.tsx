@@ -545,7 +545,7 @@ function App() {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-gray-400">v1.0.0</span>
+            <span className="text-gray-400">v1.0.1</span>
             <span>•</span>
             <span>Автор: Андрей Погорелый</span>
             <span>•</span>
@@ -573,7 +573,7 @@ function App() {
                   <button
                     onClick={() => {
                       // Демо-данные для всех полей
-                      setUsername('example_name_conf');
+                      setUsername('example_conf_bot');
                       setBotName('Ассистент Конференции');
                       setShortDescription('Помощник участника конференции');
                       setDescription(`Добро пожаловать!
@@ -585,7 +585,7 @@ function App() {
 ❓ Ответить на частые вопросы
 
 Выберите нужный раздел в меню или напишите вопрос`);
-                      setAbout('Официальный бот конференции · t.me/example_name_conf');
+                      setAbout('Официальный бот конференции · t.me/example_link');
                       setPrivacyPolicyUrl('https://example.com/privacy');
                       setFirstMessageText(`Добро пожаловать!
 
