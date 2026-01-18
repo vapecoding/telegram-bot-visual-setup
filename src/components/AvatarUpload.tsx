@@ -254,6 +254,9 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
           <p className="text-sm text-gray-600">
             Аватар
           </p>
+          <p className="text-xs text-gray-400 mt-1">
+            от 640×640 px, квадрат
+          </p>
 
           <input
             ref={fileInputRef}

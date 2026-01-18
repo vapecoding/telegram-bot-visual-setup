@@ -190,6 +190,9 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
           <p className="text-sm text-gray-600">
             Description Picture
           </p>
+          <p className="text-xs text-gray-400 mt-1">
+            строго 640×360 px
+          </p>
 
           <input
             ref={fileInputRef}
