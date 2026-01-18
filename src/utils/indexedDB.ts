@@ -10,7 +10,7 @@ const DRAFT_KEY = 'currentDraft';
 
 // Версия приложения - при изменении старые черновики будут сброшены
 // Обновляй при breaking changes в структуре данных
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 const VERSION_KEY = 'app_version';
 
 /**
