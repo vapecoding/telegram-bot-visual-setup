@@ -5,4 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Для GitHub Pages: base = /<repo-name>/
+  // Когда добавишь кастомный домен - убери эту строку
+  base: '/TGBotSettingsViewer/',
 })
