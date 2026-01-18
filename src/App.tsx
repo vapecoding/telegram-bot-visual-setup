@@ -566,7 +566,7 @@ function App() {
 🎟 Забронировать место на мастер-класс
 
 Выберите нужный раздел или напишите свой вопрос 👇`);
-                      setAbout('🤖 Официальный бот выставки · t.me/expo2026');
+                      setAbout('🤖 Официальный бот выставки · t.me/demo_bot_example');
                       setPrivacyPolicyUrl('https://expo.example.com/privacy');
                       setFirstMessageText(`Бот запущен! 🎉
 
