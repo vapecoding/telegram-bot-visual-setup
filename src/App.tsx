@@ -8,6 +8,7 @@ import { BotPicUpload } from './components/BotPicUpload';
 import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
 // validateBotSettings используется в DownloadModal
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
+import packageJson from '../package.json';
 
 // Утилита для конвертации data URL в Blob
 function dataURLtoBlob(dataURL: string): Blob {
@@ -545,7 +546,7 @@ function App() {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-gray-400">v1.0.1</span>
+            <span className="text-gray-400">v{packageJson.version}</span>
             <span>•</span>
             <span>Автор: Андрей Погорелый</span>
             <span>•</span>

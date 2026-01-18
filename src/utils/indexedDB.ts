@@ -8,10 +8,11 @@ const DB_VERSION = 1;
 const STORE_NAME = 'drafts';
 const DRAFT_KEY = 'currentDraft';
 
-// Версия приложения - при изменении старые черновики будут сброшены
-// Обновляй при breaking changes в структуре данных
-const APP_VERSION = '1.0.0';
-const VERSION_KEY = 'app_version';
+// Версия схемы данных - меняй ТОЛЬКО при breaking changes в структуре DraftData
+// (добавление/удаление/переименование полей)
+// НЕ связана с версией приложения в package.json
+const STORAGE_VERSION = '1';
+const VERSION_KEY = 'storage_version';
 
 /**
  * Типы данных для черновика
@@ -34,20 +35,20 @@ export interface DraftData {
 }
 
 /**
- * Проверка версии приложения и очистка storage при несовпадении
+ * Проверка версии схемы данных и очистка storage при несовпадении
  * Возвращает true если версия изменилась (и storage был очищен)
  */
 function checkVersionAndClearIfNeeded(): boolean {
   try {
     const storedVersion = localStorage.getItem(VERSION_KEY);
 
-    if (storedVersion !== APP_VERSION) {
-      // Версия изменилась — удаляем всю базу IndexedDB
+    if (storedVersion !== STORAGE_VERSION) {
+      // Версия схемы изменилась — удаляем всю базу IndexedDB
       if (typeof window !== 'undefined' && 'indexedDB' in window) {
         window.indexedDB.deleteDatabase(DB_NAME);
       }
-      localStorage.setItem(VERSION_KEY, APP_VERSION);
-      console.log(`App version changed: ${storedVersion} → ${APP_VERSION}, storage cleared`);
+      localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+      console.log(`Storage version changed: ${storedVersion} → ${STORAGE_VERSION}, drafts cleared`);
       return true;
     }
     return false;
