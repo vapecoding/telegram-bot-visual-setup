@@ -71,6 +71,7 @@ const renderTextWithLinks = (text: string) => {
 
 export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField, onFieldHover, showPrivacyPolicyPlaceholder }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
 
   const handleAvatarClick = () => {
     if (avatar) {
@@ -165,12 +166,18 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             {/* Avatar */}
             <div
               onClick={handleAvatarClick}
-              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden transition-all duration-300 preview-editable ${
+              className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-white font-bold text-4xl mb-3 overflow-hidden transition-all duration-300 preview-editable preview-image ${
                 avatar ? 'cursor-pointer hover:opacity-80' : ''
-              } ${highlightAvatar ? 'highlight-avatar-pulse' : ''}`}
+              } ${highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''}`}
               title={avatar ? 'Нажмите для просмотра в полном размере' : ''}
-              onMouseEnter={() => onFieldHover?.('avatar')}
-              onMouseLeave={() => onFieldHover?.(null)}
+              onMouseEnter={() => {
+                onFieldHover?.('avatar');
+                setIsAvatarHovered(true);
+              }}
+              onMouseLeave={() => {
+                onFieldHover?.(null);
+                setIsAvatarHovered(false);
+              }}
             >
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -187,7 +194,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
             >
               <h2 className={`text-white text-xl font-semibold ${
                 needsMarquee ? 'animate-marquee inline-block' : 'truncate'
-              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>
+              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`} style={{ transition: 'background 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>
                 {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
               </h2>
             </div>
@@ -224,7 +231,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       >
         <p className={`text-gray-900 whitespace-pre-wrap break-words ${
           focusedField === 'about' ? 'highlight-primary-glow' : ''
-        }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+        }`} style={{ transition: 'background 250ms ease-out' }}>
           {about ? renderTextWithLinks(about) : 'Текст "О боте" отображается здесь. Максимум 120 символов.'}
         </p>
         <p className="text-xs text-gray-500 mt-1">О боте</p>
@@ -239,7 +246,7 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
         <div>
           <p className={`text-blue-600 ${
             focusedField === 'username' ? 'highlight-primary-glow inline-block' : ''
-          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>@{username || 'username_bot'}</p>
+          }`} style={{ transition: 'background 250ms ease-out' }}>@{username || 'username_bot'}</p>
           <p className="text-xs text-gray-500 mt-1">Username</p>
         </div>
         <button className="w-6 h-6 flex items-center justify-center opacity-40">
@@ -262,14 +269,14 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
               className={`text-blue-600 hover:underline text-sm inline-block ${
                 focusedField === 'privacyPolicyUrl' ? 'highlight-primary-glow' : ''
               }`}
-              style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+              style={{ transition: 'background 250ms ease-out' }}
             >
               Политика конфиденциальности
             </a>
           ) : (
             <div className={`flex items-center gap-2 text-gray-400 text-sm ${
-              showPrivacyPolicyPlaceholder ? 'highlight-primary-glow' : ''
-            }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+              showPrivacyPolicyPlaceholder ? 'highlight-outline' : ''
+            }`} style={{ transition: 'box-shadow 250ms ease-out' }}>
               <span>🔗</span>
               <span>Политика конфиденциальности</span>
             </div>

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface ChatListItemProps {
   botName: string;
   shortDescription: string;
@@ -14,6 +16,8 @@ const getInitial = (name: string) => {
 };
 
 export function ChatListItem({ botName, shortDescription, avatar, highlightAvatar, focusedField, onFieldHover }: ChatListItemProps) {
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
+
   return (
     <div className="bg-white h-full overflow-hidden">
       {/* Telegram Header - не редактируемый */}
@@ -43,11 +47,17 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
         <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-l-4 border-blue-500 bg-blue-50">
           {/* Avatar */}
           <div
-            className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable ${
-              highlightAvatar ? 'highlight-avatar-pulse' : ''
+            className={`w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable preview-image ${
+              highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
             }`}
-            onMouseEnter={() => onFieldHover?.('avatar')}
-            onMouseLeave={() => onFieldHover?.(null)}
+            onMouseEnter={() => {
+              onFieldHover?.('avatar');
+              setIsAvatarHovered(true);
+            }}
+            onMouseLeave={() => {
+              onFieldHover?.(null);
+              setIsAvatarHovered(false);
+            }}
           >
             {avatar ? (
               <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -63,7 +73,7 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
                 className={`font-semibold text-gray-900 truncate flex-1 min-w-0 preview-editable ${
                   focusedField === 'botName' ? 'highlight-primary-glow inline-block' : ''
                 }`}
-                style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+                style={{ transition: 'background 250ms ease-out' }}
                 onMouseEnter={() => onFieldHover?.('botName')}
                 onMouseLeave={() => onFieldHover?.(null)}
               >
@@ -75,7 +85,7 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
               className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap preview-editable ${
                 focusedField === 'shortDescription' ? 'highlight-primary-glow' : ''
               }`}
-              style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+              style={{ transition: 'background 250ms ease-out' }}
               onMouseEnter={() => onFieldHover?.('shortDescription')}
               onMouseLeave={() => onFieldHover?.(null)}
             >

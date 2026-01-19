@@ -143,7 +143,7 @@ export function TelegramPhone({
   return (
     <div className="flex gap-6 items-start w-full pl-6 pr-8" style={{ height: phoneHeight }}>
       {/* Vertical Mode Switcher - Left Side - flexible width with limits */}
-      <div className="flex flex-col gap-3 pt-4 flex-shrink-0" style={{ height: '100%', width: 'clamp(180px, 30%, 350px)' }}>
+      <div className="flex flex-col gap-3 pt-4 flex-shrink-0" style={{ height: '100%', width: 'clamp(215px, 30%, 385px)' }}>
         {/* Mode buttons - fixed width */}
         <button
           onClick={() => handleModeChange('chatlist')}

@@ -31,6 +31,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
   // Липкие состояния для элементов внутри компонента
   const [inlineButtonShown, setInlineButtonShown] = useState(false);
   const [buttonResponseShown, setButtonResponseShown] = useState(false);
+  // Hover состояния для элементов превью
+  const [isBotPicHovered, setIsBotPicHovered] = useState(false);
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
 
   // Показываем картинку или placeholder
   const showPicArea = botPic || showBotPicPlaceholder;
@@ -47,11 +50,13 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
   // В stickyMode показываем всё что было показано + всё что сейчас в фокусе
   // permanentMode = пользователь нажал START, показываем всё
-  const showStartCommand = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder;
-  const showFirstMessage = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder;
 
   // Inline кнопка: permanentMode, stickyMode + липкое состояние, или текущий фокус
   const showInlineButton = permanentMode || (stickyMode && inlineButtonShown) || focusedField === 'inlineButtonText' || focusedField === 'inlineButtonResponse' || showInlineButtonPlaceholder;
+
+  // Первое сообщение показываем если: режимы, фокус на тексте, placeholder, ИЛИ показываем кнопку (кнопка требует сообщение)
+  const showStartCommand = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder || showInlineButton;
+  const showFirstMessage = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder || showInlineButton;
 
   // Ответ: permanentMode + клик, stickyMode + липкое состояние, или текущий фокус
   const showButtonResponse = (permanentMode && buttonClicked) || (stickyMode && buttonResponseShown) || focusedField === 'inlineButtonResponse';
@@ -115,11 +120,17 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
       <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3 overflow-hidden">
         <button className="text-xl opacity-40">←</button>
         <div
-          className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0 transition-all duration-300 preview-editable ${
-            highlightAvatar ? 'highlight-avatar-pulse' : ''
+          className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0 transition-all duration-300 preview-editable preview-image ${
+            highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
           }`}
-          onMouseEnter={() => onFieldHover?.('avatar')}
-          onMouseLeave={() => onFieldHover?.(null)}
+          onMouseEnter={() => {
+            onFieldHover?.('avatar');
+            setIsAvatarHovered(true);
+          }}
+          onMouseLeave={() => {
+            onFieldHover?.(null);
+            setIsAvatarHovered(false);
+          }}
         >
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -134,7 +145,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
         >
           <h3 className={`font-medium truncate ${
             focusedField === 'botName' ? 'highlight-pulse-light' : ''
-          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
+          }`} style={{ transition: 'background 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -152,14 +163,23 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
       >
         {/* Description Picture (приветственная картинка) или placeholder */}
         {showPicArea && (
-          <div ref={botPicRef} className="max-w-sm mx-auto mb-4">
+          <div
+            ref={botPicRef}
+            className={`max-w-sm mx-auto mb-4 rounded-xl transition-all duration-300 ${
+              focusedField === 'botPic' || showBotPicPlaceholder || isBotPicHovered ? 'highlight-pic-pulse' : ''
+            }`}
+            onMouseEnter={() => {
+              onFieldHover?.('botPic');
+              setIsBotPicHovered(true);
+            }}
+            onMouseLeave={() => {
+              onFieldHover?.(null);
+              setIsBotPicHovered(false);
+            }}
+          >
             <div
-              className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 preview-editable ${
-                focusedField === 'botPic' || showBotPicPlaceholder ? 'highlight-pic-pulse' : ''
-              }`}
+              className="relative rounded-xl overflow-hidden shadow-sm preview-editable preview-image"
               style={{ aspectRatio: '16 / 9' }}
-              onMouseEnter={() => onFieldHover?.('botPic')}
-              onMouseLeave={() => onFieldHover?.(null)}
             >
               {botPic ? (
                 <img
@@ -186,11 +206,17 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           {!showPicArea && (
             <div className="flex justify-center mb-3">
               <div
-                className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden transition-all duration-300 preview-editable ${
-                  highlightAvatar ? 'highlight-avatar-pulse' : ''
+                className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden transition-all duration-300 preview-editable preview-image ${
+                  highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
                 }`}
-                onMouseEnter={() => onFieldHover?.('avatar')}
-                onMouseLeave={() => onFieldHover?.(null)}
+                onMouseEnter={() => {
+                  onFieldHover?.('avatar');
+                  setIsAvatarHovered(true);
+                }}
+                onMouseLeave={() => {
+                  onFieldHover?.(null);
+                  setIsAvatarHovered(false);
+                }}
               >
                 {avatar ? (
                   <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -212,7 +238,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
             className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 preview-editable ${
               focusedField === 'description' ? 'highlight-primary-glow' : ''
             }`}
-            style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+            style={{ transition: 'background 250ms ease-out' }}
             onMouseEnter={() => onFieldHover?.('description')}
             onMouseLeave={() => onFieldHover?.(null)}
           >
@@ -245,11 +271,17 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           <div ref={firstMessageRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div
-              className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable ${
-                highlightAvatar ? 'highlight-avatar-pulse' : ''
+              className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable preview-image ${
+                highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
               }`}
-              onMouseEnter={() => onFieldHover?.('avatar')}
-              onMouseLeave={() => onFieldHover?.(null)}
+              onMouseEnter={() => {
+                onFieldHover?.('avatar');
+                setIsAvatarHovered(true);
+              }}
+              onMouseLeave={() => {
+                onFieldHover?.(null);
+                setIsAvatarHovered(false);
+              }}
             >
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -257,14 +289,15 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 getInitial(botName)
               )}
             </div>
-            <div
-              className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%] preview-editable"
-              onMouseEnter={() => onFieldHover?.('firstMessageText')}
-              onMouseLeave={() => onFieldHover?.(null)}
-            >
-              <div className={`text-sm whitespace-pre-wrap break-words ${
-                text ? 'text-gray-900' : 'text-gray-400'
-              } ${focusedField === 'firstMessageText' ? 'highlight-primary-glow' : ''}`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+            <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
+              <div
+                className={`text-sm whitespace-pre-wrap break-words preview-editable ${
+                  text ? 'text-gray-900' : 'text-gray-400'
+                } ${focusedField === 'firstMessageText' ? 'highlight-primary-glow' : ''}`}
+                style={{ transition: 'background 250ms ease-out' }}
+                onMouseEnter={() => onFieldHover?.('firstMessageText')}
+                onMouseLeave={() => onFieldHover?.(null)}
+              >
                 {text || 'Первое сообщение от бота'}
               </div>
 
@@ -303,11 +336,17 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           <div ref={buttonResponseRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div
-              className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable ${
-                highlightAvatar ? 'highlight-avatar-pulse' : ''
+              className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs flex-shrink-0 overflow-hidden transition-all duration-300 preview-editable preview-image ${
+                highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
               }`}
-              onMouseEnter={() => onFieldHover?.('avatar')}
-              onMouseLeave={() => onFieldHover?.(null)}
+              onMouseEnter={() => {
+                onFieldHover?.('avatar');
+                setIsAvatarHovered(true);
+              }}
+              onMouseLeave={() => {
+                onFieldHover?.(null);
+                setIsAvatarHovered(false);
+              }}
             >
               {avatar ? (
                 <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -315,14 +354,15 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
                 getInitial(botName)
               )}
             </div>
-            <div
-              className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%] preview-editable"
-              onMouseEnter={() => onFieldHover?.('inlineButtonResponse')}
-              onMouseLeave={() => onFieldHover?.(null)}
-            >
-              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words ${
-                focusedField === 'inlineButtonResponse' ? 'highlight-primary-glow' : ''
-              }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+            <div className="bg-white rounded-2xl shadow-sm p-3 max-w-[75%]">
+              <div
+                className={`text-sm text-gray-900 whitespace-pre-wrap break-words preview-editable ${
+                  focusedField === 'inlineButtonResponse' ? 'highlight-primary-glow' : ''
+                }`}
+                style={{ transition: 'background 250ms ease-out' }}
+                onMouseEnter={() => onFieldHover?.('inlineButtonResponse')}
+                onMouseLeave={() => onFieldHover?.(null)}
+              >
                 {inlineButton.response}
               </div>
               <div className="flex justify-end mt-1">

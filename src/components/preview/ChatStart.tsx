@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ChatStartProps {
   botName: string;
@@ -19,6 +19,10 @@ const getInitial = (name: string) => {
 };
 
 export function ChatStart({ botName, description, avatar, highlightAvatar, botPic, showBotPicPlaceholder, onStartClick, focusedField, onFieldHover }: ChatStartProps) {
+  // Hover состояния для элементов превью
+  const [isBotPicHovered, setIsBotPicHovered] = useState(false);
+  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
+
   // Показываем картинку или placeholder
   const showPicArea = botPic || showBotPicPlaceholder;
 
@@ -49,11 +53,17 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
       <div className="bg-[#5288c1] text-white px-4 py-3 flex items-center gap-3 overflow-hidden">
         <button className="text-xl opacity-40">←</button>
         <div
-          className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0 transition-all duration-300 preview-editable ${
-            highlightAvatar ? 'highlight-avatar-pulse' : ''
+          className={`w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm overflow-hidden flex-shrink-0 transition-all duration-300 preview-editable preview-image ${
+            highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
           }`}
-          onMouseEnter={() => onFieldHover?.('avatar')}
-          onMouseLeave={() => onFieldHover?.(null)}
+          onMouseEnter={() => {
+            onFieldHover?.('avatar');
+            setIsAvatarHovered(true);
+          }}
+          onMouseLeave={() => {
+            onFieldHover?.(null);
+            setIsAvatarHovered(false);
+          }}
         >
           {avatar ? (
             <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -68,7 +78,7 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
         >
           <h3 className={`font-medium truncate ${
             focusedField === 'botName' ? 'highlight-pulse-light' : ''
-          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
+          }`} style={{ transition: 'background 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -86,14 +96,23 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
       >
         {/* Description Picture (приветственная картинка) или placeholder */}
         {showPicArea && (
-          <div ref={botPicRef} className="max-w-sm mx-auto mb-4">
+          <div
+            ref={botPicRef}
+            className={`max-w-sm mx-auto mb-4 rounded-xl transition-all duration-300 ${
+              focusedField === 'botPic' || showBotPicPlaceholder || isBotPicHovered ? 'highlight-pic-pulse' : ''
+            }`}
+            onMouseEnter={() => {
+              onFieldHover?.('botPic');
+              setIsBotPicHovered(true);
+            }}
+            onMouseLeave={() => {
+              onFieldHover?.(null);
+              setIsBotPicHovered(false);
+            }}
+          >
             <div
-              className={`relative rounded-xl overflow-hidden shadow-sm transition-all duration-300 preview-editable ${
-                focusedField === 'botPic' || showBotPicPlaceholder ? 'highlight-pic-pulse' : ''
-              }`}
+              className="relative rounded-xl overflow-hidden shadow-sm preview-editable preview-image"
               style={{ aspectRatio: '16 / 9' }}
-              onMouseEnter={() => onFieldHover?.('botPic')}
-              onMouseLeave={() => onFieldHover?.(null)}
             >
               {botPic ? (
                 <img
@@ -120,11 +139,17 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
           {!showPicArea && (
             <div className="flex justify-center mb-3">
               <div
-                className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden transition-all duration-300 preview-editable ${
-                  highlightAvatar ? 'highlight-avatar-pulse' : ''
+                className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-3xl overflow-hidden transition-all duration-300 preview-editable preview-image ${
+                  highlightAvatar || isAvatarHovered ? 'highlight-avatar-pulse' : ''
                 }`}
-                onMouseEnter={() => onFieldHover?.('avatar')}
-                onMouseLeave={() => onFieldHover?.(null)}
+                onMouseEnter={() => {
+                  onFieldHover?.('avatar');
+                  setIsAvatarHovered(true);
+                }}
+                onMouseLeave={() => {
+                  onFieldHover?.(null);
+                  setIsAvatarHovered(false);
+                }}
               >
                 {avatar ? (
                   <img src={avatar} alt={botName} className="w-full h-full object-cover" />
@@ -146,7 +171,7 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
             className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 preview-editable ${
               focusedField === 'description' ? 'highlight-primary-glow' : ''
             }`}
-            style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+            style={{ transition: 'background 250ms ease-out' }}
             onMouseEnter={() => onFieldHover?.('description')}
             onMouseLeave={() => onFieldHover?.(null)}
           >

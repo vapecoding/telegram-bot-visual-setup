@@ -55,7 +55,14 @@
 .highlight-primary-glow {
   background: rgba(59, 130, 246, 0.4) !important;
   border-radius: 2px;
-  transition: background 250ms ease-out, border-radius 250ms ease-out;
+  transition: background 250ms ease-out;
+}
+
+/* Outline вариант для контурного выделения (для placeholder-ов) */
+.highlight-outline {
+  box-shadow: inset 0 0 0 3px rgba(234, 179, 8, 0.6);
+  border-radius: 4px;
+  transition: box-shadow 250ms ease-out;
 }
 
 /* === SUCCESS HIGHLIGHTS (green) === */
@@ -213,7 +220,7 @@
   border-radius: 4px;
   padding: 2px 4px;
   margin: -2px -4px;
-  transition: background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out;
+  transition: background 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out;
 }
 
 .highlight-bg {
@@ -234,6 +241,14 @@
   animation: highlight-pulse 1.2s ease-in-out infinite;
   will-change: box-shadow;
   transition: box-shadow 300ms ease-out;
+}
+
+/* Hover эффект для аватарок в превью - через CSS :hover */
+.preview-image.preview-editable:hover {
+  --highlight-shadow-start: 0 0 0 4px rgba(250, 204, 21, 0.7), 0 0 16px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-peak: 0 0 0 6px rgba(250, 204, 21, 1.0), 0 0 24px rgba(250, 204, 21, 0.8);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 .highlight-button-pulse {
@@ -270,10 +285,17 @@
   transition: all 200ms ease-out;
 }
 
-/* Лёгкая hover-подсветка при наведении на поля в превью */
+/* Hover-подсветка при наведении на поля в превью */
 .preview-editable:hover {
-  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
+  box-shadow: inset 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* Желтая пульсирующая обводка для аватарок и картинок при hover в превью */
+.preview-image:hover {
+  --highlight-shadow-start: 0 0 0 4px rgba(250, 204, 21, 0.7), 0 0 16px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-peak: 0 0 0 6px rgba(250, 204, 21, 1.0), 0 0 24px rgba(250, 204, 21, 0.8);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 /* ============================================
