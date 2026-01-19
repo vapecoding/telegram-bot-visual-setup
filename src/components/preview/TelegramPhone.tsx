@@ -126,8 +126,8 @@ export function TelegramPhone({
     }
   }, [focusedField]);
 
-  // Высота телефона для выравнивания кнопки
-  const phoneHeight = 'min(900px, calc(100vh - 8rem))';
+  // Адаптивная высота телефона (от 700px до 1000px, оптимально 85vh)
+  const phoneHeight = 'clamp(700px, 85vh, 1000px)';
 
   return (
     <div className="flex gap-4 items-start">
@@ -190,8 +190,8 @@ export function TelegramPhone({
         )}
       </div>
 
-      {/* Phone Frame - Right Side */}
-      <div className="flex-1 flex justify-center pl-16">
+      {/* Phone Frame - centered, не растягивается */}
+      <div className="flex justify-center">
         <div
           className="bg-gray-900 rounded-[3rem] p-4 shadow-2xl overflow-hidden flex-shrink-0"
           style={{

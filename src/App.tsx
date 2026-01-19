@@ -561,11 +561,12 @@ function App() {
           </div>
         </header>
 
-        {/* Main Layout: Two Columns */}
-        <div className="flex">
-          {/* Left Column: Form */}
-          <div className="w-1/2 p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
-            <div className="max-w-xl">
+        {/* Main Layout: Two Columns with ultrawide constraints */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-[1600px] flex">
+            {/* Left Column: Form */}
+            <div className="w-1/2 p-8 overflow-y-auto max-w-[800px]" style={{ maxHeight: 'calc(100vh - 56px)' }}>
+              <div className="max-w-xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Настройки бота
@@ -922,10 +923,10 @@ function App() {
               </div>
 
             </div>
-          </div>
+            </div>
 
-          {/* Right Column: Preview */}
-          <div className="w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 border-l border-gray-200">
+            {/* Right Column: Preview - centered in its space */}
+            <div className="w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 border-l border-gray-200 flex justify-center items-start">
             <TelegramPhone
                   username={username}
                   botName={botName}
@@ -970,6 +971,7 @@ function App() {
                   }}
                   onDownload={handleExport}
                 />
+            </div>
           </div>
         </div>
       </div>
