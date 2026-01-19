@@ -1077,7 +1077,6 @@ function App() {
                   botPic={botPicUrl || undefined}
                   focusedField={focusedField}
                   highlightField={highlightField}
-                  previewHoveredField={previewHoveredField}
                   showBotPicPlaceholder={showBotPicPlaceholder}
                   showPrivacyPolicyPlaceholder={showPrivacyPolicyPlaceholder}
                   showFirstMessagePlaceholder={showFirstMessagePlaceholder}
