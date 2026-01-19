@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Loading spinner animation (used in index.html fallback) */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Highlight Effects for Form-Preview Link */
 
 /* Effect 1: Glow (for botName) */
