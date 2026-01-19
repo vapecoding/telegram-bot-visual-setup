@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* ============================================
+   UTILITY ANIMATIONS
+   ============================================ */
+
 /* Loading spinner animation (used in index.html fallback) */
 @keyframes spin {
   to {
@@ -7,76 +11,81 @@
   }
 }
 
-/* Highlight Effects for Form-Preview Link */
-
-/* Effect 1: Glow (for botName) */
-.highlight-glow {
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.8), 0 0 16px rgba(59, 130, 246, 0.5);
-  animation: glow-pulse 1.5s ease-in-out infinite;
+/* Marquee animation for long bot names (special case) */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-@keyframes glow-pulse {
+.animate-marquee {
+  animation: marquee 8s linear infinite;
+}
+
+/* ============================================
+   UNIFIED HIGHLIGHT SYSTEM
+   Duration: 1.2s (300ms * 4 для плавности)
+   Easing: ease-in-out
+   GPU accelerated: will-change
+   ============================================ */
+
+/* Base pulse animation - используется для всех highlight */
+@keyframes highlight-pulse {
   0%, 100% {
-    text-shadow: 0 0 8px rgba(59, 130, 246, 0.8), 0 0 16px rgba(59, 130, 246, 0.5);
+    box-shadow: var(--highlight-shadow-start);
   }
   50% {
-    text-shadow: 0 0 12px rgba(59, 130, 246, 1), 0 0 24px rgba(59, 130, 246, 0.7);
+    box-shadow: var(--highlight-shadow-peak);
   }
 }
 
-/* Effect 2: Pulsing Border (for shortDescription) */
-.highlight-pulse-border {
-  outline: 2px solid rgba(168, 85, 247, 0.7);
-  outline-offset: 2px;
-  border-radius: 4px;
-  animation: border-pulse 1.2s ease-in-out infinite;
+/* === PRIMARY HIGHLIGHTS (blue) === */
+/* Для: botName, form fields при hover с превью */
+.highlight-primary {
+  --highlight-shadow-start: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 12px rgba(59, 130, 246, 0.2);
+  --highlight-shadow-peak: 0 0 0 5px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes border-pulse {
+/* Glow вариант для текста (text-shadow вместо box-shadow) */
+.highlight-primary-glow {
+  animation: highlight-glow 1.2s ease-in-out infinite;
+  will-change: filter;
+}
+
+@keyframes highlight-glow {
   0%, 100% {
-    outline-color: rgba(168, 85, 247, 0.7);
-    outline-offset: 2px;
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
   }
   50% {
-    outline-color: rgba(168, 85, 247, 1);
-    outline-offset: 4px;
+    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.9));
   }
 }
 
-/* Effect 2b: Pulsing background for text in constrained containers */
-.highlight-pulse-shadow {
-  border-radius: 4px;
-  animation: bg-pulse 1.2s ease-in-out infinite;
+/* === SUCCESS HIGHLIGHTS (green) === */
+/* Для: description field */
+.highlight-success {
+  --highlight-shadow-start: 0 0 0 3px rgba(34, 197, 94, 0.3), 0 0 12px rgba(34, 197, 94, 0.2);
+  --highlight-shadow-peak: 0 0 0 5px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes bg-pulse {
-  0%, 100% {
-    background-color: rgba(168, 85, 247, 0.1);
-  }
-  50% {
-    background-color: rgba(168, 85, 247, 0.25);
-  }
-}
-
-/* Effect 2c: Text glow for dark/blue backgrounds (white/yellow glow) */
-.highlight-pulse-light {
-  animation: text-glow-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes text-glow-pulse {
-  0%, 100% {
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px rgba(255, 255, 255, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 12px rgba(255, 220, 100, 0.9), 0 0 24px rgba(255, 220, 100, 0.5), 0 0 36px rgba(255, 220, 100, 0.3);
-  }
-}
-
-/* Effect 3: Background Highlight (for description) */
-.highlight-bg {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.15));
+/* Background shimmer вариант для больших текстовых блоков */
+.highlight-success-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(34, 197, 94, 0.1),
+    rgba(34, 197, 94, 0.2),
+    rgba(34, 197, 94, 0.1)
+  );
   background-size: 200% 100%;
   animation: bg-shimmer 2s ease-in-out infinite;
+  will-change: background-position;
 }
 
 @keyframes bg-shimmer {
@@ -88,93 +97,149 @@
   }
 }
 
-/* Effect 5: Soft pulsing ring for avatar (subtle, not too thick) */
+/* === WARNING HIGHLIGHTS (yellow) === */
+/* Для: inline buttons, botPic */
+.highlight-warning {
+  --highlight-shadow-start: 0 0 0 3px rgba(250, 204, 21, 0.5), 0 0 12px rgba(250, 204, 21, 0.3);
+  --highlight-shadow-peak: 0 0 0 5px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+/* === INFO HIGHLIGHTS (cyan) === */
+/* Для: avatar */
+.highlight-info {
+  --highlight-shadow-start: 0 0 0 3px rgba(6, 182, 212, 0.5), 0 0 12px rgba(6, 182, 212, 0.3);
+  --highlight-shadow-peak: 0 0 0 5px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.5);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+/* === ACCENT HIGHLIGHTS (indigo) === */
+/* Для: form field highlight при hover с превью */
+.highlight-accent {
+  --highlight-shadow-start: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 0 12px rgba(99, 102, 241, 0.2);
+  --highlight-shadow-peak: 0 0 0 4px rgba(99, 102, 241, 0.7), 0 0 20px rgba(99, 102, 241, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+/* === SPECIAL: Light text glow для темных фонов === */
+.highlight-light {
+  animation: highlight-light-glow 1.2s ease-in-out infinite;
+  will-change: filter;
+}
+
+@keyframes highlight-light-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 220, 100, 0.9));
+  }
+}
+
+/* ============================================
+   LEGACY CLASS ALIASES (для обратной совместимости)
+   Дублируем стили вместо @apply (Tailwind v4 ограничение)
+   TODO: Постепенно заменить в компонентах на новые классы
+   ============================================ */
+.highlight-glow {
+  animation: highlight-glow 1.2s ease-in-out infinite;
+  will-change: filter;
+}
+
+.highlight-pulse-border {
+  --highlight-shadow-start: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 12px rgba(59, 130, 246, 0.2);
+  --highlight-shadow-peak: 0 0 0 5px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+.highlight-pulse-shadow {
+  --highlight-shadow-start: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 12px rgba(59, 130, 246, 0.2);
+  --highlight-shadow-peak: 0 0 0 5px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+.highlight-pulse-light {
+  animation: highlight-light-glow 1.2s ease-in-out infinite;
+  will-change: filter;
+}
+
+.highlight-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(34, 197, 94, 0.1),
+    rgba(34, 197, 94, 0.2),
+    rgba(34, 197, 94, 0.1)
+  );
+  background-size: 200% 100%;
+  animation: bg-shimmer 2s ease-in-out infinite;
+  will-change: background-position;
+}
+
 .highlight-avatar-pulse {
-  animation: avatar-ring-pulse 1.5s ease-in-out infinite;
+  --highlight-shadow-start: 0 0 0 3px rgba(6, 182, 212, 0.5), 0 0 12px rgba(6, 182, 212, 0.3);
+  --highlight-shadow-peak: 0 0 0 5px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.5);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes avatar-ring-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.8), 0 0 12px rgba(6, 182, 212, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 5px rgba(6, 182, 212, 1), 0 0 20px rgba(6, 182, 212, 0.7);
-  }
-}
-
-/* Effect 4: Pulsing yellow ring for inline buttons */
 .highlight-button-pulse {
-  animation: button-ring-pulse 1.2s ease-in-out infinite;
+  --highlight-shadow-start: 0 0 0 3px rgba(250, 204, 21, 0.5), 0 0 12px rgba(250, 204, 21, 0.3);
+  --highlight-shadow-peak: 0 0 0 5px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes button-ring-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 5px rgba(250, 204, 21, 1);
-  }
-}
-
-/* Effect 6: Pulsing ring for botPic */
 .highlight-pic-pulse {
-  animation: pic-ring-pulse 1.2s ease-in-out infinite;
+  --highlight-shadow-start: 0 0 0 3px rgba(250, 204, 21, 0.5), 0 0 12px rgba(250, 204, 21, 0.3);
+  --highlight-shadow-peak: 0 0 0 5px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes pic-ring-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.9);
-  }
-}
-
-/* Marquee animation for long bot names */
-.animate-marquee {
-  animation: marquee 8s linear infinite;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-/* Effect 7: Form field highlight when hovering preview (reverse direction) */
 .highlight-form-field {
-  animation: form-field-pulse 1.2s ease-in-out infinite;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 12px rgba(99, 102, 241, 0.3);
+  --highlight-shadow-start: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 0 12px rgba(99, 102, 241, 0.2);
+  --highlight-shadow-peak: 0 0 0 4px rgba(99, 102, 241, 0.7), 0 0 20px rgba(99, 102, 241, 0.4);
+  animation: highlight-pulse 1.2s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
-@keyframes form-field-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5), 0 0 12px rgba(99, 102, 241, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.8), 0 0 20px rgba(99, 102, 241, 0.5);
-  }
-}
+/* ============================================
+   INTERACTIVE STATES
+   ============================================ */
 
 /* Cursor pointer for editable preview elements */
 .preview-editable {
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-editable:hover {
   opacity: 0.85;
 }
 
-/* Workaround for Tailwind v4 CSS nesting issue with hover */
+/* ============================================
+   BUTTON HOVER STATES
+   Workaround for Tailwind v4 CSS nesting issue
+   ============================================ */
+
 /* Mode switcher buttons */
+.btn-mode-inactive {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-mode-inactive:hover {
   background-color: #dbeafe !important; /* blue-100 */
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important; /* shadow-lg */
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
   transform: scale(1.05) !important;
+}
+
+.btn-mode-active {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-mode-active:hover {
@@ -182,36 +247,56 @@
 }
 
 /* Download button */
+.btn-download {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-download:hover {
   background-color: #22c55e !important; /* green-500 */
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important; /* shadow-xl */
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
   transform: scale(1.05) !important;
 }
 
 /* START button */
+.btn-start {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-start:hover {
   background-color: #4a7db0 !important;
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important; /* shadow-2xl */
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
   transform: scale(1.1) !important;
 }
 
 /* Demo button */
+.btn-demo {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-demo:hover {
   background-color: #eff6ff !important; /* blue-50 */
   border-color: #60a5fa !important; /* blue-400 */
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; /* shadow-md */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   transform: scale(1.03) !important;
 }
 
 /* Clear button */
+.btn-clear {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-clear:hover {
   background-color: #f3f4f6 !important; /* gray-100 */
   border-color: #9ca3af !important; /* gray-400 */
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; /* shadow-md */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   transform: scale(1.03) !important;
 }
 
 /* Form input/textarea hover */
+.form-input {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .form-input:hover {
   border-color: #60a5fa !important; /* blue-400 */
   background-color: #eff6ff !important; /* blue-50 */
@@ -219,6 +304,10 @@
 }
 
 /* Image upload zone hover */
+.upload-zone {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .upload-zone:hover {
   border-color: #60a5fa !important; /* blue-400 */
   background-color: #eff6ff !important; /* blue-50 */
@@ -226,6 +315,10 @@
 }
 
 /* Image preview zone hover */
+.upload-preview {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .upload-preview:hover {
   border-color: #60a5fa !important; /* blue-400 */
   background-color: #f8fafc !important; /* slate-50 */
@@ -233,6 +326,10 @@
 }
 
 /* Delete button in upload zones */
+.btn-delete {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .btn-delete:hover {
   background-color: #fef2f2 !important; /* red-50 */
   color: #dc2626 !important; /* red-600 */
@@ -240,6 +337,10 @@
 }
 
 /* Link hover in upload zones */
+.link-preview {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .link-preview:hover {
   color: #2563eb !important; /* blue-600 */
   text-decoration: underline !important;
