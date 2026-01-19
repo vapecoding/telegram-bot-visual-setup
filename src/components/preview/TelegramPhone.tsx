@@ -126,16 +126,14 @@ export function TelegramPhone({
     }
   }, [focusedField]);
 
-  // Адаптивная высота телефона (от 700px до 1000px, оптимально 85vh)
-  const phoneHeight = 'clamp(700px, 85vh, 1000px)';
+  // Адаптивная высота телефона (от 650px до 850px, оптимально 80vh)
+  // На ultrawide (1260px высота): 80vh = ~1008px, но clamp ограничит до 850px
+  const phoneHeight = 'clamp(650px, 80vh, 850px)';
 
   return (
-    <div className="flex gap-4 items-start">
+    <div className="flex gap-4 items-start" style={{ height: phoneHeight }}>
       {/* Vertical Mode Switcher - Left Side */}
-      <div
-        className="flex flex-col gap-3 pt-4"
-        style={{ height: phoneHeight }}
-      >
+      <div className="flex flex-col gap-3 pt-4" style={{ height: '100%' }}>
         <button
           onClick={() => handleModeChange('chatlist')}
           className={`px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer ${

@@ -826,7 +826,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Описание"
                     rows={2}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(description.length, 512)} ${previewHoveredField === 'description' ? 'highlight-form-field' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(description.length, 512)} ${previewHoveredField === 'description' ? 'highlight-accent-inner' : ''}`}
                     style={{ minHeight: '60px', overflow: 'hidden' }}
                   />
                   <div className="flex justify-end mt-1">
@@ -861,7 +861,7 @@ function App() {
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Первое сообщение"
                     rows={2}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(firstMessageText.length, 4096)} ${previewHoveredField === 'firstMessageText' ? 'highlight-form-field' : ''}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(firstMessageText.length, 4096)} ${previewHoveredField === 'firstMessageText' ? 'highlight-accent-inner' : ''}`}
                     style={{ minHeight: '60px', overflow: 'hidden' }}
                   />
                   <div className="flex justify-end mt-1">
@@ -910,7 +910,7 @@ function App() {
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="Ответ на кнопку"
                       rows={2}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonResponse.length, 4096)} ${previewHoveredField === 'inlineButtonResponse' ? 'highlight-form-field' : ''}`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonResponse.length, 4096)} ${previewHoveredField === 'inlineButtonResponse' ? 'highlight-accent-inner' : ''}`}
                       style={{ minHeight: '60px', overflow: 'hidden' }}
                     />
                     <div className="flex justify-end mt-1">
