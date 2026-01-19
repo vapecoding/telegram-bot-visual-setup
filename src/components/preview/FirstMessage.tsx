@@ -12,6 +12,8 @@ interface FirstMessageProps {
   highlightAvatar?: boolean;
   botPic?: string;
   showBotPicPlaceholder?: boolean;
+  showFirstMessagePlaceholder?: boolean;
+  showInlineButtonPlaceholder?: boolean;
   focusedField?: string | null;
   onFieldHover?: (field: string | null) => void;
   permanentMode?: boolean; // true если пользователь физически нажал START
@@ -24,7 +26,7 @@ const getInitial = (name: string) => {
   return match ? match[0].toUpperCase() : 'B';
 };
 
-export function FirstMessage({ botName, description, text, inlineButton, avatar, highlightAvatar, botPic, showBotPicPlaceholder, focusedField, onFieldHover, permanentMode, stickyMode }: FirstMessageProps) {
+export function FirstMessage({ botName, description, text, inlineButton, avatar, highlightAvatar, botPic, showBotPicPlaceholder, showFirstMessagePlaceholder, showInlineButtonPlaceholder, focusedField, onFieldHover, permanentMode, stickyMode }: FirstMessageProps) {
   const [buttonClicked, setButtonClicked] = useState(false);
   // Липкие состояния для элементов внутри компонента
   const [inlineButtonShown, setInlineButtonShown] = useState(false);
@@ -45,11 +47,11 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
 
   // В stickyMode показываем всё что было показано + всё что сейчас в фокусе
   // permanentMode = пользователь нажал START, показываем всё
-  const showStartCommand = permanentMode || stickyMode || focusedField === 'firstMessageText';
-  const showFirstMessage = permanentMode || stickyMode || focusedField === 'firstMessageText';
+  const showStartCommand = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder;
+  const showFirstMessage = permanentMode || stickyMode || focusedField === 'firstMessageText' || showFirstMessagePlaceholder;
 
   // Inline кнопка: permanentMode, stickyMode + липкое состояние, или текущий фокус
-  const showInlineButton = permanentMode || (stickyMode && inlineButtonShown) || focusedField === 'inlineButtonText' || focusedField === 'inlineButtonResponse';
+  const showInlineButton = permanentMode || (stickyMode && inlineButtonShown) || focusedField === 'inlineButtonText' || focusedField === 'inlineButtonResponse' || showInlineButtonPlaceholder;
 
   // Ответ: permanentMode + клик, stickyMode + липкое состояние, или текущий фокус
   const showButtonResponse = (permanentMode && buttonClicked) || (stickyMode && buttonResponseShown) || focusedField === 'inlineButtonResponse';
@@ -65,7 +67,10 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
   useEffect(() => {
     const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
       if (ref.current) {
-        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Задержка для завершения layout перед скроллом
+        setTimeout(() => {
+          ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       }
     };
 
@@ -127,9 +132,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           onMouseEnter={() => onFieldHover?.('botName')}
           onMouseLeave={() => onFieldHover?.(null)}
         >
-          <h3 className={`font-medium truncate transition-all duration-300 ${
+          <h3 className={`font-medium truncate ${
             focusedField === 'botName' ? 'highlight-pulse-light' : ''
-          }`}>{botName || 'Имя бота'}</h3>
+          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -204,9 +209,10 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
           {/* Description */}
           <div
             ref={descriptionRef}
-            className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 preview-editable ${
-              focusedField === 'description' ? 'highlight-pulse-shadow' : ''
+            className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 preview-editable ${
+              focusedField === 'description' ? 'highlight-primary-glow' : ''
             }`}
+            style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
             onMouseEnter={() => onFieldHover?.('description')}
             onMouseLeave={() => onFieldHover?.(null)}
           >
@@ -235,7 +241,7 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
         )}
 
         {/* Bot's welcome message (incoming - left side) */}
-        {showFirstMessage && text && (
+        {showFirstMessage && (text || showFirstMessagePlaceholder) && (
           <div ref={firstMessageRef} className="flex gap-2 mb-3">
             {/* Bot avatar */}
             <div
@@ -256,10 +262,10 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
               onMouseEnter={() => onFieldHover?.('firstMessageText')}
               onMouseLeave={() => onFieldHover?.(null)}
             >
-              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-                focusedField === 'firstMessageText' ? 'highlight-pulse-shadow' : ''
-              }`}>
-                {text}
+              <div className={`text-sm whitespace-pre-wrap break-words ${
+                text ? 'text-gray-900' : 'text-gray-400'
+              } ${focusedField === 'firstMessageText' ? 'highlight-primary-glow' : ''}`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+                {text || 'Первое сообщение от бота'}
               </div>
 
               <div className="flex justify-end mt-1">
@@ -272,20 +278,22 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
         )}
 
         {/* Inline Button - Telegram style (outside bubble, blurred background) */}
-        {showInlineButton && text && inlineButton && inlineButton.text && (
+        {showInlineButton && (text || showFirstMessagePlaceholder) && ((inlineButton && inlineButton.text) || showInlineButtonPlaceholder) && (
           <div ref={inlineButtonRef} className="flex gap-2 mb-3 ml-10">
             <button
               onClick={() => setButtonClicked(true)}
               onMouseEnter={() => onFieldHover?.('inlineButtonText')}
               onMouseLeave={() => onFieldHover?.(null)}
-              className={`flex-1 py-2.5 px-4 text-center text-sm text-white font-medium rounded-xl
+              className={`flex-1 py-2.5 px-4 text-center text-sm font-medium rounded-xl
                 bg-black/10 backdrop-blur-[2px] transition-all preview-editable
                 ${buttonClicked
                   ? 'bg-black/15 text-white/70'
                   : 'hover:bg-black/20 cursor-pointer active:scale-[0.98]'
-                } ${focusedField === 'inlineButtonText' ? 'highlight-button-pulse' : ''}`}
+                } ${focusedField === 'inlineButtonText' ? 'highlight-button-pulse' : ''} ${
+                  inlineButton?.text ? 'text-white' : 'text-white/50'
+                }`}
             >
-              {inlineButton.text}
+              {inlineButton?.text || 'Inline-кнопка'}
             </button>
           </div>
         )}
@@ -312,9 +320,9 @@ export function FirstMessage({ botName, description, text, inlineButton, avatar,
               onMouseEnter={() => onFieldHover?.('inlineButtonResponse')}
               onMouseLeave={() => onFieldHover?.(null)}
             >
-              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-                focusedField === 'inlineButtonResponse' ? 'highlight-pulse-shadow' : ''
-              }`}>
+              <div className={`text-sm text-gray-900 whitespace-pre-wrap break-words ${
+                focusedField === 'inlineButtonResponse' ? 'highlight-primary-glow' : ''
+              }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
                 {inlineButton.response}
               </div>
               <div className="flex justify-end mt-1">

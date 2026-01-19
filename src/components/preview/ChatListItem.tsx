@@ -60,9 +60,10 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
           <div className="flex-1 min-w-0 border-b border-gray-100 pb-3 overflow-hidden">
             <div className="flex items-start justify-between mb-1">
               <h3
-                className={`font-semibold text-gray-900 truncate flex-1 min-w-0 transition-all duration-300 preview-editable ${
-                  focusedField === 'botName' ? 'highlight-pulse-shadow' : ''
+                className={`font-semibold text-gray-900 truncate flex-1 min-w-0 preview-editable ${
+                  focusedField === 'botName' ? 'highlight-primary-glow inline-block' : ''
                 }`}
+                style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
                 onMouseEnter={() => onFieldHover?.('botName')}
                 onMouseLeave={() => onFieldHover?.(null)}
               >
@@ -71,9 +72,10 @@ export function ChatListItem({ botName, shortDescription, avatar, highlightAvata
               <span className="text-xs text-gray-500 ml-2 flex-shrink-0">12:34</span>
             </div>
             <p
-              className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-300 preview-editable ${
-                focusedField === 'shortDescription' ? 'highlight-pulse-shadow' : ''
+              className={`text-sm text-gray-600 truncate overflow-hidden text-ellipsis whitespace-nowrap preview-editable ${
+                focusedField === 'shortDescription' ? 'highlight-primary-glow' : ''
               }`}
+              style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
               onMouseEnter={() => onFieldHover?.('shortDescription')}
               onMouseLeave={() => onFieldHover?.(null)}
             >

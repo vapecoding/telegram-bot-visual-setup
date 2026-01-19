@@ -10,6 +10,47 @@ import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 import packageJson from '../package.json';
 
+// Throttle utility для оптимизации hover событий
+function throttle<T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+): {
+  throttled: (...args: Parameters<T>) => void;
+  cancel: () => void;
+} {
+  let timeoutId: number | null = null;
+  let lastArgs: Parameters<T> | null = null;
+
+  const throttled = function (...args: Parameters<T>) {
+    lastArgs = args;
+
+    if (timeoutId === null) {
+      // Выполняем сразу (leading edge)
+      func(...args);
+
+      // Устанавливаем таймер для следующего вызова
+      timeoutId = window.setTimeout(() => {
+        // Выполняем последний накопленный вызов (trailing edge)
+        if (lastArgs) {
+          func(...lastArgs);
+        }
+        timeoutId = null;
+        lastArgs = null;
+      }, delay);
+    }
+  };
+
+  const cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+      lastArgs = null;
+    }
+  };
+
+  return { throttled, cancel };
+}
+
 // Утилита для конвертации data URL в Blob
 function dataURLtoBlob(dataURL: string): Blob {
   const arr = dataURL.split(',');
@@ -222,13 +263,20 @@ function App() {
   const [inputFocusedField, setInputFocusedField] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showBotPicPlaceholder, setShowBotPicPlaceholder] = useState(false);
+  const [showPrivacyPolicyPlaceholder, setShowPrivacyPolicyPlaceholder] = useState(false);
+  const [showFirstMessagePlaceholder, setShowFirstMessagePlaceholder] = useState(false);
+  const [showInlineButtonPlaceholder, setShowInlineButtonPlaceholder] = useState(false);
   const [highlightAvatar, setHighlightAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [avatarWarning, setAvatarWarning] = useState<string | null>(null);
   const [previewHoveredField, setPreviewHoveredField] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null); // Для FieldHelp (с задержкой)
 
-  // Вычисляемое активное поле: hover имеет приоритет, но focus сохраняется при редактировании
-  const focusedField = hoveredField || inputFocusedField;
+  // Поле для мгновенной подсветки в превью (без задержки)
+  const highlightField = hoveredField || inputFocusedField;
+
+  // Ref для таймера задержки FieldHelp
+  const fieldHelpDelayTimerRef = useRef<number | null>(null);
 
   // Refs для полей формы (для скролла при hover на превью)
   const fieldRefs = {
@@ -258,6 +306,61 @@ function App() {
   // Toast уведомления
   const { toasts, dismissToast, showSuccess, showWarning, showInfo } = useToast();
 
+  // Throttled обработчики для hover событий (оптимизация производительности)
+  const hoveredFieldThrottle = useRef(
+    throttle((field: string | null) => {
+      setHoveredField(field);
+    }, 50)
+  ).current;
+
+  const previewHoveredFieldThrottle = useRef(
+    throttle((field: string | null) => {
+      setPreviewHoveredField(field);
+    }, 50)
+  ).current;
+
+  const throttledSetHoveredField = hoveredFieldThrottle.throttled;
+  const throttledSetPreviewHoveredField = previewHoveredFieldThrottle.throttled;
+
+  // Cleanup throttle таймеров при размонтировании
+  useEffect(() => {
+    return () => {
+      hoveredFieldThrottle.cancel();
+      previewHoveredFieldThrottle.cancel();
+    };
+  }, [hoveredFieldThrottle, previewHoveredFieldThrottle]);
+
+  // Управление focusedField с задержкой для FieldHelp
+  useEffect(() => {
+    // Активное поле: hover на форму, hover на превью, или фокус
+    const activeField = hoveredField || previewHoveredField;
+
+    // Отменяем предыдущий таймер при любом изменении
+    if (fieldHelpDelayTimerRef.current !== null) {
+      clearTimeout(fieldHelpDelayTimerRef.current);
+      fieldHelpDelayTimerRef.current = null;
+    }
+
+    if (activeField !== null) {
+      // Если навели на поле (форму или превью) - сразу показываем его (без задержки)
+      setFocusedField(activeField);
+    } else {
+      // Если убрали hover - ждём 2 секунды перед исчезанием
+      fieldHelpDelayTimerRef.current = window.setTimeout(() => {
+        setFocusedField(inputFocusedField);
+        fieldHelpDelayTimerRef.current = null;
+      }, 2000);
+    }
+
+    // Cleanup при размонтировании
+    return () => {
+      if (fieldHelpDelayTimerRef.current !== null) {
+        clearTimeout(fieldHelpDelayTimerRef.current);
+        fieldHelpDelayTimerRef.current = null;
+      }
+    };
+  }, [hoveredField, previewHoveredField, inputFocusedField]);
+
   // Закрытие модального окна по ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -279,10 +382,10 @@ function App() {
     }
   }, [previewHoveredField]);
 
-  // Handler для hover на превью
-  const handlePreviewFieldHover = (field: string | null) => {
-    setPreviewHoveredField(field);
-  };
+  // Handler для hover на превью (с throttle для оптимизации)
+  const handlePreviewFieldHover = useCallback((field: string | null) => {
+    throttledSetPreviewHoveredField(field);
+  }, [throttledSetPreviewHoveredField]);
 
   // Auto-resize textarea
   const autoResizeTextarea = useCallback((element: HTMLTextAreaElement | null) => {
@@ -561,11 +664,12 @@ function App() {
           </div>
         </header>
 
-        {/* Main Layout: Two Columns */}
-        <div className="flex">
-          {/* Left Column: Form */}
-          <div className="w-1/2 p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
-            <div className="max-w-xl">
+        {/* Main Layout: Two Columns with ultrawide constraints */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-[1920px] min-w-[1200px] flex">
+            {/* Left Column: Form - Fixed 800px with breathing room for scrollbar */}
+            <div className="w-[800px] flex-shrink-0 pl-8 pr-12 py-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 56px)' }}>
+              <div className="w-full">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Настройки бота
@@ -649,8 +753,8 @@ function App() {
                     type="text"
                     value={botName}
                     onChange={(e) => setBotName(e.target.value)}
-                    onMouseEnter={() => setHoveredField('botName')}
-                    onMouseLeave={() => setHoveredField(null)}
+                    onMouseEnter={() => throttledSetHoveredField('botName')}
+                    onMouseLeave={() => throttledSetHoveredField(null)}
                     onFocus={() => setInputFocusedField('botName')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Имя бота"
@@ -670,8 +774,8 @@ function App() {
                     type="text"
                     value={shortDescription}
                     onChange={(e) => setShortDescription(e.target.value)}
-                    onMouseEnter={() => setHoveredField('shortDescription')}
-                    onMouseLeave={() => setHoveredField(null)}
+                    onMouseEnter={() => throttledSetHoveredField('shortDescription')}
+                    onMouseLeave={() => throttledSetHoveredField(null)}
                     onFocus={() => setInputFocusedField('shortDescription')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Короткое описание"
@@ -691,8 +795,8 @@ function App() {
                     onAvatarChange={handleAvatarChange}
                     onFocus={() => setHighlightAvatar(true)}
                     onBlur={() => setHighlightAvatar(false)}
-                    onHoverStart={() => setHoveredField('avatar')}
-                    onHoverEnd={() => setHoveredField(null)}
+                    onHoverStart={() => throttledSetHoveredField('avatar')}
+                    onHoverEnd={() => throttledSetHoveredField(null)}
                     onValidationChange={(err, warn) => {
                       setAvatarError(err);
                       setAvatarWarning(warn);
@@ -715,8 +819,8 @@ function App() {
                     type="text"
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
-                    onMouseEnter={() => setHoveredField('about')}
-                    onMouseLeave={() => setHoveredField(null)}
+                    onMouseEnter={() => throttledSetHoveredField('about')}
+                    onMouseLeave={() => throttledSetHoveredField(null)}
                     onFocus={() => setInputFocusedField('about')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="О боте"
@@ -741,8 +845,8 @@ function App() {
                         const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                         setUsername(value);
                       }}
-                      onMouseEnter={() => setHoveredField('username')}
-                      onMouseLeave={() => setHoveredField(null)}
+                      onMouseEnter={() => throttledSetHoveredField('username')}
+                      onMouseLeave={() => throttledSetHoveredField(null)}
                       onFocus={() => setInputFocusedField('username')}
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="username_bot"
@@ -769,11 +873,23 @@ function App() {
                     type="url"
                     value={privacyPolicyUrl}
                     onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
-                    onMouseEnter={() => setHoveredField('privacyPolicyUrl')}
-                    onMouseLeave={() => setHoveredField(null)}
-                    onFocus={() => setInputFocusedField('privacyPolicyUrl')}
-                    onBlur={() => setInputFocusedField(null)}
-                    placeholder="Privacy Policy URL"
+                    onMouseEnter={() => {
+                      throttledSetHoveredField('privacyPolicyUrl');
+                      if (!privacyPolicyUrl) setShowPrivacyPolicyPlaceholder(true);
+                    }}
+                    onMouseLeave={() => {
+                      throttledSetHoveredField(null);
+                      setShowPrivacyPolicyPlaceholder(false);
+                    }}
+                    onFocus={() => {
+                      setInputFocusedField('privacyPolicyUrl');
+                      if (!privacyPolicyUrl) setShowPrivacyPolicyPlaceholder(true);
+                    }}
+                    onBlur={() => {
+                      setInputFocusedField(null);
+                      setShowPrivacyPolicyPlaceholder(false);
+                    }}
+                    placeholder="Ссылка на политику конфиденциальности"
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(privacyPolicyUrl.length, 256)} ${previewHoveredField === 'privacyPolicyUrl' ? 'highlight-form-field' : ''}`}
                   />
                   <div className="flex justify-end mt-1">
@@ -798,11 +914,11 @@ function App() {
                     onBotPicChange={handleBotPicChange}
                     onFocus={() => setInputFocusedField('botPic')}
                     onHoverStart={() => {
-                      setHoveredField('botPic');
+                      throttledSetHoveredField('botPic');
                       setShowBotPicPlaceholder(true);
                     }}
                     onHoverEnd={() => {
-                      setHoveredField(null);
+                      throttledSetHoveredField(null);
                       setShowBotPicPlaceholder(false);
                     }}
                   />
@@ -819,8 +935,8 @@ function App() {
                       setDescription(e.target.value);
                       autoResizeTextarea(e.target);
                     }}
-                    onMouseEnter={() => setHoveredField('description')}
-                    onMouseLeave={() => setHoveredField(null)}
+                    onMouseEnter={() => throttledSetHoveredField('description')}
+                    onMouseLeave={() => throttledSetHoveredField(null)}
                     onFocus={() => setInputFocusedField('description')}
                     onBlur={() => setInputFocusedField(null)}
                     placeholder="Описание"
@@ -854,10 +970,22 @@ function App() {
                       setFirstMessageText(e.target.value);
                       autoResizeTextarea(e.target);
                     }}
-                    onMouseEnter={() => setHoveredField('firstMessageText')}
-                    onMouseLeave={() => setHoveredField(null)}
-                    onFocus={() => setInputFocusedField('firstMessageText')}
-                    onBlur={() => setInputFocusedField(null)}
+                    onMouseEnter={() => {
+                      throttledSetHoveredField('firstMessageText');
+                      if (!firstMessageText) setShowFirstMessagePlaceholder(true);
+                    }}
+                    onMouseLeave={() => {
+                      throttledSetHoveredField(null);
+                      setShowFirstMessagePlaceholder(false);
+                    }}
+                    onFocus={() => {
+                      setInputFocusedField('firstMessageText');
+                      if (!firstMessageText) setShowFirstMessagePlaceholder(true);
+                    }}
+                    onBlur={() => {
+                      setInputFocusedField(null);
+                      setShowFirstMessagePlaceholder(false);
+                    }}
                     placeholder="Первое сообщение"
                     rows={2}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none resize-none transition-all duration-300 form-input ${getInputBorderClass(firstMessageText.length, 4096)} ${previewHoveredField === 'firstMessageText' ? 'highlight-form-field' : ''}`}
@@ -877,10 +1005,22 @@ function App() {
                     type="text"
                     value={inlineButtonText}
                     onChange={(e) => setInlineButtonText(e.target.value)}
-                    onMouseEnter={() => setHoveredField('inlineButtonText')}
-                    onMouseLeave={() => setHoveredField(null)}
-                    onFocus={() => setInputFocusedField('inlineButtonText')}
-                    onBlur={() => setInputFocusedField(null)}
+                    onMouseEnter={() => {
+                      throttledSetHoveredField('inlineButtonText');
+                      if (!inlineButtonText) setShowInlineButtonPlaceholder(true);
+                    }}
+                    onMouseLeave={() => {
+                      throttledSetHoveredField(null);
+                      setShowInlineButtonPlaceholder(false);
+                    }}
+                    onFocus={() => {
+                      setInputFocusedField('inlineButtonText');
+                      if (!inlineButtonText) setShowInlineButtonPlaceholder(true);
+                    }}
+                    onBlur={() => {
+                      setInputFocusedField(null);
+                      setShowInlineButtonPlaceholder(false);
+                    }}
                     placeholder="Inline-кнопка"
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all duration-300 form-input ${getInputBorderClass(inlineButtonText.length, 64)} ${previewHoveredField === 'inlineButtonText' ? 'highlight-form-field' : ''}`}
                   />
@@ -903,8 +1043,8 @@ function App() {
                         setInlineButtonResponse(e.target.value);
                         autoResizeTextarea(e.target);
                       }}
-                      onMouseEnter={() => setHoveredField('inlineButtonResponse')}
-                      onMouseLeave={() => setHoveredField(null)}
+                      onMouseEnter={() => throttledSetHoveredField('inlineButtonResponse')}
+                      onMouseLeave={() => throttledSetHoveredField(null)}
                       onFocus={() => setInputFocusedField('inlineButtonResponse')}
                       onBlur={() => setInputFocusedField(null)}
                       placeholder="Ответ на кнопку"
@@ -922,10 +1062,10 @@ function App() {
               </div>
 
             </div>
-          </div>
+            </div>
 
-          {/* Right Column: Preview */}
-          <div className="w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 border-l border-gray-200">
+            {/* Right Column: Preview - takes remaining space */}
+            <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 py-8 border-l border-gray-200 flex items-start">
             <TelegramPhone
                   username={username}
                   botName={botName}
@@ -936,7 +1076,12 @@ function App() {
                   avatar={avatarUrl || undefined}
                   botPic={botPicUrl || undefined}
                   focusedField={focusedField}
+                  highlightField={highlightField}
+                  previewHoveredField={previewHoveredField}
                   showBotPicPlaceholder={showBotPicPlaceholder}
+                  showPrivacyPolicyPlaceholder={showPrivacyPolicyPlaceholder}
+                  showFirstMessagePlaceholder={showFirstMessagePlaceholder}
+                  showInlineButtonPlaceholder={showInlineButtonPlaceholder}
                   highlightAvatar={highlightAvatar}
                   avatarError={avatarError}
                   avatarWarning={avatarWarning}
@@ -970,6 +1115,7 @@ function App() {
                   }}
                   onDownload={handleExport}
                 />
+            </div>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ interface BotProfileProps {
   highlightAvatar?: boolean;
   focusedField?: string | null;
   onFieldHover?: (field: string | null) => void;
+  showPrivacyPolicyPlaceholder?: boolean;
 }
 
 // Получить первую букву (пропуская эмодзи)
@@ -68,7 +69,7 @@ const renderTextWithLinks = (text: string) => {
   });
 };
 
-export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField, onFieldHover }: BotProfileProps) {
+export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar, highlightAvatar, focusedField, onFieldHover, showPrivacyPolicyPlaceholder }: BotProfileProps) {
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   const handleAvatarClick = () => {
@@ -184,9 +185,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
               onMouseEnter={() => onFieldHover?.('botName')}
               onMouseLeave={() => onFieldHover?.(null)}
             >
-              <h2 className={`text-white text-xl font-semibold transition-all duration-300 ${
+              <h2 className={`text-white text-xl font-semibold ${
                 needsMarquee ? 'animate-marquee inline-block' : 'truncate'
-              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`}>
+              } ${focusedField === 'botName' ? 'highlight-pulse-light' : ''}`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>
                 {needsMarquee ? `${botName}          ${botName}` : botName || 'Имя бота'}
               </h2>
             </div>
@@ -221,9 +222,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
         onMouseEnter={() => onFieldHover?.('about')}
         onMouseLeave={() => onFieldHover?.(null)}
       >
-        <p className={`text-gray-900 whitespace-pre-wrap break-words transition-all duration-300 rounded px-1 -mx-1 ${
-          focusedField === 'about' ? 'highlight-pulse-shadow' : ''
-        }`}>
+        <p className={`text-gray-900 whitespace-pre-wrap break-words ${
+          focusedField === 'about' ? 'highlight-primary-glow' : ''
+        }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
           {about ? renderTextWithLinks(about) : 'Текст "О боте" отображается здесь. Максимум 120 символов.'}
         </p>
         <p className="text-xs text-gray-500 mt-1">О боте</p>
@@ -236,9 +237,9 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
         onMouseLeave={() => onFieldHover?.(null)}
       >
         <div>
-          <p className={`text-blue-600 transition-all duration-300 rounded px-1 -mx-1 ${
-            focusedField === 'username' ? 'highlight-pulse-shadow' : ''
-          }`}>@{username || 'username_bot'}</p>
+          <p className={`text-blue-600 ${
+            focusedField === 'username' ? 'highlight-primary-glow inline-block' : ''
+          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>@{username || 'username_bot'}</p>
           <p className="text-xs text-gray-500 mt-1">Username</p>
         </div>
         <button className="w-6 h-6 flex items-center justify-center opacity-40">
@@ -247,22 +248,32 @@ export function BotProfile({ username, botName, about, privacyPolicyUrl, avatar,
       </div>
 
       {/* Privacy Policy */}
-      {privacyPolicyUrl && (
+      {(privacyPolicyUrl || showPrivacyPolicyPlaceholder) && (
         <div
-          className="px-4 py-3 border-b border-gray-200 preview-editable"
+          className="px-4 py-3 border-b border-gray-200 preview-editable transition-all duration-300"
           onMouseEnter={() => onFieldHover?.('privacyPolicyUrl')}
           onMouseLeave={() => onFieldHover?.(null)}
         >
-          <a
-            href={privacyPolicyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`text-blue-600 hover:underline text-sm transition-all duration-300 rounded px-1 -mx-1 inline-block ${
-              focusedField === 'privacyPolicyUrl' ? 'highlight-pulse-shadow' : ''
-            }`}
-          >
-            Политика конфиденциальности
-          </a>
+          {privacyPolicyUrl ? (
+            <a
+              href={privacyPolicyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-blue-600 hover:underline text-sm inline-block ${
+                focusedField === 'privacyPolicyUrl' ? 'highlight-primary-glow' : ''
+              }`}
+              style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
+            >
+              Политика конфиденциальности
+            </a>
+          ) : (
+            <div className={`flex items-center gap-2 text-gray-400 text-sm ${
+              showPrivacyPolicyPlaceholder ? 'highlight-primary-glow' : ''
+            }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}>
+              <span>🔗</span>
+              <span>Политика конфиденциальности</span>
+            </div>
+          )}
         </div>
       )}
 
