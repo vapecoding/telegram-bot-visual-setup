@@ -17,7 +17,6 @@ interface TelegramPhoneProps {
   botPic?: string;
   focusedField?: string | null; // Для FieldHelp (с задержкой)
   highlightField?: string | null; // Для подсветки превью (мгновенно)
-  previewHoveredField?: string | null; // Для лёгкой hover-подсветки в превью
   showBotPicPlaceholder?: boolean;
   showPrivacyPolicyPlaceholder?: boolean;
   showFirstMessagePlaceholder?: boolean;
@@ -63,7 +62,6 @@ export function TelegramPhone({
   botPic,
   focusedField,
   highlightField,
-  previewHoveredField,
   showBotPicPlaceholder,
   showPrivacyPolicyPlaceholder,
   showFirstMessagePlaceholder,
