@@ -30,7 +30,10 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
   useEffect(() => {
     const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
       if (ref.current) {
-        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Задержка для завершения layout перед скроллом
+        setTimeout(() => {
+          ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       }
     };
 
@@ -63,9 +66,9 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
           onMouseEnter={() => onFieldHover?.('botName')}
           onMouseLeave={() => onFieldHover?.(null)}
         >
-          <h3 className={`font-medium truncate transition-all duration-300 ${
+          <h3 className={`font-medium truncate ${
             focusedField === 'botName' ? 'highlight-pulse-light' : ''
-          }`}>{botName || 'Имя бота'}</h3>
+          }`} style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out' }}>{botName || 'Имя бота'}</h3>
           <p className="text-xs text-white/60">бот</p>
         </div>
         <button className="text-lg opacity-40">⋮</button>
@@ -140,9 +143,10 @@ export function ChatStart({ botName, description, avatar, highlightAvatar, botPi
           {/* Description */}
           <div
             ref={descriptionRef}
-            className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 transition-all duration-300 rounded px-1 -mx-1 preview-editable ${
-              focusedField === 'description' ? 'highlight-pulse-shadow' : ''
+            className={`text-sm text-gray-700 whitespace-pre-wrap break-words mb-4 preview-editable ${
+              focusedField === 'description' ? 'highlight-primary-glow' : ''
             }`}
+            style={{ transition: 'background 250ms ease-out, border-radius 250ms ease-out' }}
             onMouseEnter={() => onFieldHover?.('description')}
             onMouseLeave={() => onFieldHover?.(null)}
           >

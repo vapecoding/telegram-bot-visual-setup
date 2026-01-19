@@ -51,19 +51,11 @@
   will-change: box-shadow;
 }
 
-/* Glow вариант для текста (text-shadow вместо box-shadow) */
+/* Glow вариант для текста - ФОНОВАЯ анимация (работает с overflow:hidden) */
 .highlight-primary-glow {
-  animation: highlight-glow 1.2s ease-in-out infinite;
-  will-change: filter;
-}
-
-@keyframes highlight-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
-  }
-  50% {
-    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.9));
-  }
+  background: rgba(59, 130, 246, 0.4) !important;
+  border-radius: 2px;
+  transition: background 250ms ease-out, border-radius 250ms ease-out;
 }
 
 /* === SUCCESS HIGHLIGHTS (green) === */
@@ -125,31 +117,19 @@
 }
 
 /* === SPECIAL: Для полей с overflow:hidden === */
-/* Box-shadow обрезается overflow:hidden, используем outline + background */
+/* ТОЛЬКО фоновая анимация - box-shadow/outline обрезаются */
 .highlight-accent-inner {
-  /* Outline НЕ обрезается overflow:hidden (в отличие от box-shadow) */
-  outline: 2px solid transparent;
-  outline-offset: -2px;
-  animation: outline-pulse-inner 1.2s ease-in-out infinite;
-  will-change: outline-color;
-  /* Также добавляем яркую background анимацию */
+  /* ЯРКАЯ фоновая анимация - хорошо видна */
   background: linear-gradient(
     90deg,
-    rgba(99, 102, 241, 0.05),
-    rgba(99, 102, 241, 0.12),
-    rgba(99, 102, 241, 0.05)
+    rgba(99, 102, 241, 0.15),
+    rgba(99, 102, 241, 0.30),
+    rgba(99, 102, 241, 0.15)
   ) !important;
   background-size: 200% 100% !important;
-  animation: outline-pulse-inner 1.2s ease-in-out infinite, bg-shimmer-inner 2s ease-in-out infinite;
-}
-
-@keyframes outline-pulse-inner {
-  0%, 100% {
-    outline-color: rgba(99, 102, 241, 0.3);
-  }
-  50% {
-    outline-color: rgba(99, 102, 241, 0.6);
-  }
+  animation: bg-shimmer-inner 1.5s ease-in-out infinite;
+  will-change: background-position;
+  transition: background 250ms ease-out, background-size 250ms ease-out;
 }
 
 @keyframes bg-shimmer-inner {
@@ -161,18 +141,28 @@
   }
 }
 
-/* === SPECIAL: Light text glow для темных фонов === */
+/* === SPECIAL: Light text glow для темных фонов - ФОНОВАЯ анимация === */
 .highlight-light {
-  animation: highlight-light-glow 1.2s ease-in-out infinite;
-  will-change: filter;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.2)
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: bg-shimmer-light 1.2s ease-in-out infinite;
+  will-change: background-position;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
 }
 
-@keyframes highlight-light-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+@keyframes bg-shimmer-light {
+  0% {
+    background-position: 200% 0;
   }
-  50% {
-    filter: drop-shadow(0 0 8px rgba(255, 220, 100, 0.9));
+  100% {
+    background-position: -200% 0;
   }
 }
 
@@ -182,8 +172,18 @@
    TODO: Постепенно заменить в компонентах на новые классы
    ============================================ */
 .highlight-glow {
-  animation: highlight-glow 1.2s ease-in-out infinite;
-  will-change: filter;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.2),
+    rgba(59, 130, 246, 0.4),
+    rgba(59, 130, 246, 0.2)
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: bg-shimmer-primary 1.2s ease-in-out infinite;
+  will-change: background-position;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
 }
 
 .highlight-pulse-border {
@@ -201,8 +201,19 @@
 }
 
 .highlight-pulse-light {
-  animation: highlight-light-glow 1.2s ease-in-out infinite;
-  will-change: filter;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.2)
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: bg-shimmer-light 1.2s ease-in-out infinite;
+  will-change: background-position;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 250ms ease-out, border-radius 250ms ease-out, padding 250ms ease-out, margin 250ms ease-out;
 }
 
 .highlight-bg {
@@ -218,24 +229,27 @@
 }
 
 .highlight-avatar-pulse {
-  --highlight-shadow-start: 0 0 0 3px rgba(6, 182, 212, 0.5), 0 0 12px rgba(6, 182, 212, 0.3);
-  --highlight-shadow-peak: 0 0 0 5px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.5);
+  --highlight-shadow-start: 0 0 0 4px rgba(250, 204, 21, 0.7), 0 0 16px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-peak: 0 0 0 6px rgba(250, 204, 21, 1.0), 0 0 24px rgba(250, 204, 21, 0.8);
   animation: highlight-pulse 1.2s ease-in-out infinite;
   will-change: box-shadow;
+  transition: box-shadow 300ms ease-out;
 }
 
 .highlight-button-pulse {
-  --highlight-shadow-start: 0 0 0 3px rgba(250, 204, 21, 0.5), 0 0 12px rgba(250, 204, 21, 0.3);
-  --highlight-shadow-peak: 0 0 0 5px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-start: 0 0 0 4px rgba(250, 204, 21, 0.7), 0 0 16px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-peak: 0 0 0 6px rgba(250, 204, 21, 1.0), 0 0 24px rgba(250, 204, 21, 0.8);
   animation: highlight-pulse 1.2s ease-in-out infinite;
   will-change: box-shadow;
+  transition: box-shadow 300ms ease-out;
 }
 
 .highlight-pic-pulse {
-  --highlight-shadow-start: 0 0 0 3px rgba(250, 204, 21, 0.5), 0 0 12px rgba(250, 204, 21, 0.3);
-  --highlight-shadow-peak: 0 0 0 5px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-start: 0 0 0 4px rgba(250, 204, 21, 0.7), 0 0 16px rgba(250, 204, 21, 0.5);
+  --highlight-shadow-peak: 0 0 0 6px rgba(250, 204, 21, 1.0), 0 0 24px rgba(250, 204, 21, 0.8);
   animation: highlight-pulse 1.2s ease-in-out infinite;
   will-change: box-shadow;
+  transition: box-shadow 300ms ease-out;
 }
 
 .highlight-form-field {
@@ -243,6 +257,7 @@
   --highlight-shadow-peak: 0 0 0 4px rgba(99, 102, 241, 0.7), 0 0 20px rgba(99, 102, 241, 0.4);
   animation: highlight-pulse 1.2s ease-in-out infinite;
   will-change: box-shadow;
+  transition: box-shadow 300ms ease-out;
 }
 
 /* ============================================
@@ -252,11 +267,13 @@
 /* Cursor pointer for editable preview elements */
 .preview-editable {
   cursor: pointer;
-  transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 200ms ease-out;
 }
 
+/* Лёгкая hover-подсветка при наведении на поля в превью */
 .preview-editable:hover {
-  opacity: 0.85;
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
 }
 
 /* ============================================
@@ -381,4 +398,29 @@
 .link-preview:hover {
   color: #2563eb !important; /* blue-600 */
   text-decoration: underline !important;
+}
+
+/* ============================================
+   PREVIEW SCREEN TRANSITIONS
+   ============================================ */
+
+/* Fade-in animation for preview screens */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-screen-enter {
+  animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* FieldHelp content fade */
+.field-help-content {
+  animation: fadeIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

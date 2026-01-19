@@ -102,50 +102,52 @@ export function FieldHelp({ focusedField, avatarError, avatarWarning }: FieldHel
 
   return (
     <div className={`rounded-xl p-4 text-sm transition-all duration-200 ${getBlockStyle()}`}>
-      <div className="flex items-start gap-2 mb-2">
-        <span className={`text-base ${isDefault && !hasAvatarError && !hasAvatarWarning ? 'opacity-40' : 'opacity-100'}`}>
-          {getIcon()}
-        </span>
-        <h4 className={`font-semibold ${
-          hasAvatarError ? 'text-red-800' :
-          hasAvatarWarning ? 'text-yellow-800' :
-          isDefault ? 'text-gray-500' : 'text-gray-800'
+      <div key={focusedField || 'default'} className="field-help-content">
+        <div className="flex items-start gap-2 mb-2">
+          <span className={`text-base ${isDefault && !hasAvatarError && !hasAvatarWarning ? 'opacity-40' : 'opacity-100'}`}>
+            {getIcon()}
+          </span>
+          <h4 className={`font-semibold ${
+            hasAvatarError ? 'text-red-800' :
+            hasAvatarWarning ? 'text-yellow-800' :
+            isDefault ? 'text-gray-500' : 'text-gray-800'
+          }`}>
+            {help.title}
+          </h4>
+        </div>
+
+        {/* Алерт блок для ошибки/предупреждения аватарки */}
+        {(hasAvatarError || hasAvatarWarning) && (
+          <div className={`mb-3 p-2 rounded-lg ${
+            hasAvatarError ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+          }`}>
+            <p className="text-sm font-medium">
+              {avatarError || avatarWarning}
+            </p>
+          </div>
+        )}
+
+        <p className={`whitespace-pre-wrap leading-relaxed ${
+          hasAvatarError ? 'text-red-600' :
+          hasAvatarWarning ? 'text-yellow-700' :
+          isDefault ? 'text-gray-400 text-xs' : 'text-gray-600'
         }`}>
-          {help.title}
-        </h4>
+          {help.description}
+        </p>
+        {help.limits && (
+          <div className={`mt-2 pt-2 border-t ${
+            hasAvatarError ? 'border-red-200' :
+            hasAvatarWarning ? 'border-yellow-200' :
+            'border-gray-200/50'
+          }`}>
+            <span className={`text-xs font-medium ${
+              hasAvatarError ? 'text-red-600' :
+              hasAvatarWarning ? 'text-yellow-600' :
+              'text-blue-600'
+            }`}>{help.limits}</span>
+          </div>
+        )}
       </div>
-
-      {/* Алерт блок для ошибки/предупреждения аватарки */}
-      {(hasAvatarError || hasAvatarWarning) && (
-        <div className={`mb-3 p-2 rounded-lg ${
-          hasAvatarError ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          <p className="text-sm font-medium">
-            {avatarError || avatarWarning}
-          </p>
-        </div>
-      )}
-
-      <p className={`whitespace-pre-wrap leading-relaxed ${
-        hasAvatarError ? 'text-red-600' :
-        hasAvatarWarning ? 'text-yellow-700' :
-        isDefault ? 'text-gray-400 text-xs' : 'text-gray-600'
-      }`}>
-        {help.description}
-      </p>
-      {help.limits && (
-        <div className={`mt-2 pt-2 border-t ${
-          hasAvatarError ? 'border-red-200' :
-          hasAvatarWarning ? 'border-yellow-200' :
-          'border-gray-200/50'
-        }`}>
-          <span className={`text-xs font-medium ${
-            hasAvatarError ? 'text-red-600' :
-            hasAvatarWarning ? 'text-yellow-600' :
-            'text-blue-600'
-          }`}>{help.limits}</span>
-        </div>
-      )}
     </div>
   );
 }
