@@ -126,9 +126,11 @@ export function TelegramPhone({
     }
   }, [focusedField]);
 
-  // Адаптивная высота телефона (от 650px до 850px, оптимально 80vh)
-  // На ultrawide (1260px высота): 80vh = ~1008px, но clamp ограничит до 850px
-  const phoneHeight = 'clamp(650px, 80vh, 850px)';
+  // Адаптивная высота телефона с более консервативным масштабированием
+  // На обычных экранах (1080p): 75vh ≈ 810px → clamp даст ~750px
+  // На ultrawide (1260px высота): 75vh ≈ 945px → clamp ограничит до 750px max
+  // На маленьких: min 600px
+  const phoneHeight = 'clamp(600px, 75vh, 750px)';
 
   return (
     <div className="flex gap-4 items-start" style={{ height: phoneHeight }}>

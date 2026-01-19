@@ -125,17 +125,40 @@
 }
 
 /* === SPECIAL: Для полей с overflow:hidden === */
-/* Box-shadow обрезается overflow:hidden, используем background */
+/* Box-shadow обрезается overflow:hidden, используем outline + background */
 .highlight-accent-inner {
+  /* Outline НЕ обрезается overflow:hidden (в отличие от box-shadow) */
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  animation: outline-pulse-inner 1.2s ease-in-out infinite;
+  will-change: outline-color;
+  /* Также добавляем яркую background анимацию */
   background: linear-gradient(
     90deg,
-    rgba(99, 102, 241, 0.08),
-    rgba(99, 102, 241, 0.15),
-    rgba(99, 102, 241, 0.08)
-  );
-  background-size: 200% 100%;
-  animation: bg-shimmer 2s ease-in-out infinite;
-  will-change: background-position;
+    rgba(99, 102, 241, 0.05),
+    rgba(99, 102, 241, 0.12),
+    rgba(99, 102, 241, 0.05)
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: outline-pulse-inner 1.2s ease-in-out infinite, bg-shimmer-inner 2s ease-in-out infinite;
+}
+
+@keyframes outline-pulse-inner {
+  0%, 100% {
+    outline-color: rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    outline-color: rgba(99, 102, 241, 0.6);
+  }
+}
+
+@keyframes bg-shimmer-inner {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* === SPECIAL: Light text glow для темных фонов === */
