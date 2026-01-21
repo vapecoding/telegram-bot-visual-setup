@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { MobileBlocker } from './components/MobileBlocker';
-import { TelegramPhone } from './components/preview/TelegramPhone';
+import { TelegramPhone, type PreviewMode } from './components/preview/TelegramPhone';
 import { AvatarUpload } from './components/AvatarUpload';
 import { BotPicUpload } from './components/BotPicUpload';
 import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
+import { MobileTabs } from './components/MobileTabs';
+import { MobilePreviewSwitcher } from './components/MobilePreviewSwitcher';
 // validateBotSettings используется в DownloadModal
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 import packageJson from '../package.json';
+import { supabase } from './lib/supabase';
+import { uploadImage } from './lib/imageUpload';
 
 // Throttle utility для оптимизации hover событий
 function throttle<T extends (...args: any[]) => void>(
@@ -272,6 +275,10 @@ function App() {
   const [previewHoveredField, setPreviewHoveredField] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null); // Для FieldHelp (с задержкой)
 
+  // Mobile state
+  const [mobileActiveTab, setMobileActiveTab] = useState<'form' | 'preview'>('form');
+  const [mobilePreviewMode, setMobilePreviewMode] = useState<PreviewMode>('chatlist');
+
   // Поле для мгновенной подсветки в превью (без задержки)
   const highlightField = hoveredField || inputFocusedField;
 
@@ -301,7 +308,11 @@ function App() {
   const [saveError, setSaveError] = useState(false); // Ошибка сохранения
   const justHydratedRef = useRef(true); // Пропуск первого "сохранения" после гидратации
   const hasShownRestoreToastRef = useRef(false); // Защита от двойного toast в StrictMode
+  const hasHydratedShareRef = useRef(false); // Защита от двойной загрузки share-данных в StrictMode
   const saveTimeoutRef = useRef<number | null>(null);
+  const [isSharing, setIsSharing] = useState(false); // Состояние загрузки для кнопки "Поделиться"
+  const [shareUrl, setShareUrl] = useState<string | null>(null); // URL для модалки
+  const [showShareModal, setShowShareModal] = useState(false); // Показ модалки со ссылкой
 
   // Toast уведомления
   const { toasts, dismissToast, showSuccess, showWarning, showInfo } = useToast();
@@ -401,9 +412,138 @@ function App() {
     if (fieldRefs.inlineButtonResponse.current) autoResizeTextarea(fieldRefs.inlineButtonResponse.current);
   }, [description, firstMessageText, inlineButtonResponse, autoResizeTextarea]);
 
-  // Восстановление черновика при загрузке
+  // Восстановление черновика при загрузке или данных из публичной ссылки
   useEffect(() => {
     async function hydrate() {
+      // Проверяем, есть ли share ID в URL
+      const hash = window.location.hash;
+      if (hash.startsWith('#share=')) {
+        // Защита от двойной загрузки в React StrictMode (dev)
+        if (hasHydratedShareRef.current) return;
+        hasHydratedShareRef.current = true;
+
+        // Устанавливаем флаг загрузки (блокирует кнопки)
+        setIsHydrating(true);
+
+        const shareParam = hash.substring(7); // Удаляем #share=
+
+        // Флаг для отслеживания таймаута
+        let timedOut = false;
+
+        // Timeout для fallback (10 секунд)
+        const timeoutId = setTimeout(() => {
+          if (isHydrating) {
+            timedOut = true;
+            setIsHydrating(false);
+            showWarning(
+              'Загрузка не удалась',
+              'Превышено время ожидания. Проверьте интернет-соединение или попробуйте позже.'
+            );
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }, 10000);
+
+        try {
+          // Парсим id и secret из формата: id.secret
+          const [shareId, shareSecret] = shareParam.split('.');
+
+          if (!shareId || !shareSecret) {
+            throw new Error('Неверный формат ссылки');
+          }
+
+          // Вызываем RPC функцию share_get
+          const { data, error } = await supabase.rpc('share_get', {
+            share_id: shareId,
+            share_secret: shareSecret
+          });
+
+          // Если таймаут уже сработал - игнорируем результат
+          if (timedOut) {
+            console.log('Request completed after timeout, ignoring results');
+            return;
+          }
+
+          if (error) {
+            console.error('Supabase RPC error:', error);
+            throw new Error(error.message);
+          }
+
+          if (!data) {
+            throw new Error('Данные не найдены');
+          }
+
+          const shareData = data;
+
+          // Заполняем текстовые поля
+          setUsername(shareData.username || '');
+          setBotName(shareData.botName || '');
+          setShortDescription(shareData.shortDescription || '');
+          setDescription(shareData.description || '');
+          setAbout(shareData.about || '');
+          setPrivacyPolicyUrl(shareData.privacyPolicyUrl || '');
+          setFirstMessageText(shareData.firstMessageText || '');
+          setInlineButtonText(shareData.inlineButtonText || '');
+          setInlineButtonResponse(shareData.inlineButtonResponse || '');
+
+          // Устанавливаем URL картинок сразу - они будут грузиться в фоне
+          setAvatarUrl(shareData.avatarUrl || null);
+          setBotPicUrl(shareData.botPicUrl || null);
+
+          // Ждём загрузки изображений максимум 10 секунд (для улучшения UX)
+          // После этого разблокируем UI, картинки продолжат грузиться в фоне
+          const imageLoadPromises: Promise<void>[] = [];
+
+          if (shareData.avatarUrl) {
+            imageLoadPromises.push(
+              new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = shareData.avatarUrl;
+              })
+            );
+          }
+
+          if (shareData.botPicUrl) {
+            imageLoadPromises.push(
+              new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = shareData.botPicUrl;
+              })
+            );
+          }
+
+          // Ждём максимум 10 секунд, потом показываем UI
+          // Не загруженные картинки будут догружаться в фоне
+          if (imageLoadPromises.length > 0) {
+            await Promise.race([
+              Promise.all(imageLoadPromises),
+              new Promise(resolve => setTimeout(resolve, 10000))
+            ]);
+          }
+
+          clearTimeout(timeoutId);
+          showInfo('Данные загружены', 'Конфигурация загружена из публичной ссылки');
+
+          // Очищаем hash из URL после загрузки
+          window.history.replaceState(null, '', window.location.pathname);
+          setIsHydrating(false);
+          return;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error('Failed to load shared data:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Не удалось загрузить данные по ссылке';
+          showWarning('Ошибка загрузки', errorMessage);
+          // Очищаем hash даже в случае ошибки
+          window.history.replaceState(null, '', window.location.pathname);
+          setIsHydrating(false);
+          return; // Важно! Останавливаем выполнение, не загружаем черновик
+        }
+      }
+
+      // Если нет share ссылки - стандартное восстановление из IndexedDB
       // Показываем предупреждение если IndexedDB недоступен
       if (!isIDBSupported) {
         setIsHydrating(false);
@@ -577,6 +717,99 @@ function App() {
     return 'border-gray-300 focus:ring-blue-500';
   };
 
+  // Обработка импорта из ZIP
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImport = async (file: File) => {
+    try {
+      // Загружаем и распаковываем ZIP
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+
+      // Читаем settings.json
+      const settingsFile = zipContent.file('settings.json');
+      if (!settingsFile) {
+        showWarning('Ошибка', 'В архиве не найден файл settings.json');
+        return;
+      }
+
+      const settingsText = await settingsFile.async('text');
+      const settings = JSON.parse(settingsText);
+
+      // Заполняем текстовые поля
+      setUsername(settings.username || '');
+      setBotName(settings.botName || '');
+      setShortDescription(settings.shortDescription || '');
+      setDescription(settings.description || '');
+      setAbout(settings.about || '');
+      setPrivacyPolicyUrl(settings.privacyPolicyUrl || '');
+
+      // Обрабатываем firstMessage
+      if (settings.firstMessage) {
+        setFirstMessageText(settings.firstMessage.text || '');
+        if (settings.firstMessage.inlineButton) {
+          setInlineButtonText(settings.firstMessage.inlineButton.text || '');
+          setInlineButtonResponse(settings.firstMessage.inlineButton.response || '');
+        } else {
+          setInlineButtonText('');
+          setInlineButtonResponse('');
+        }
+      } else {
+        setFirstMessageText('');
+        setInlineButtonText('');
+        setInlineButtonResponse('');
+      }
+
+      // Загружаем аватарку (если есть)
+      if (settings.avatarFile) {
+        const avatarFile = zipContent.file(settings.avatarFile);
+        if (avatarFile) {
+          const avatarBlob = await avatarFile.async('blob');
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setAvatarUrl(e.target?.result as string);
+          };
+          reader.readAsDataURL(avatarBlob);
+        }
+      } else {
+        setAvatarUrl(null);
+      }
+
+      // Загружаем bot_pic (если есть)
+      if (settings.botPicFile) {
+        const botPicFile = zipContent.file(settings.botPicFile);
+        if (botPicFile) {
+          const botPicBlob = await botPicFile.async('blob');
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setBotPicUrl(e.target?.result as string);
+          };
+          reader.readAsDataURL(botPicBlob);
+        }
+      } else {
+        setBotPicUrl(null);
+      }
+
+      showSuccess('Импорт выполнен', 'Данные успешно загружены из архива');
+    } catch (error) {
+      console.error('Failed to import ZIP:', error);
+      showWarning('Ошибка импорта', 'Не удалось загрузить данные из архива');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImport(file);
+    }
+    // Сброс значения input для возможности повторной загрузки того же файла
+    e.target.value = '';
+  };
+
   // Обработка экспорта с генерацией ZIP
   const handleExport = async () => {
     try {
@@ -633,10 +866,401 @@ function App() {
     }
   };
 
+  // Обработка создания публичной ссылки для шаринга
+  const handleShare = async () => {
+    if (isSharing) return; // Предотвращаем повторные клики
+
+    try {
+      setIsSharing(true);
+
+      // Загружаем картинки в Supabase Storage (если они НЕ являются уже публичными URL)
+      let uploadedAvatarUrl: string | null = null;
+      let uploadedBotPicUrl: string | null = null;
+      let avatarFailed = false;
+      let botPicFailed = false;
+
+      // Avatar: загружаем в Storage, если есть
+      if (avatarUrl) {
+        // Если это уже URL из Supabase Storage - используем как есть
+        if (avatarUrl.startsWith('https://') && avatarUrl.includes('supabase.co')) {
+          uploadedAvatarUrl = avatarUrl;
+        } else {
+          // Загружаем в Storage (base64 или любой другой формат)
+          try {
+            uploadedAvatarUrl = await uploadImage(avatarUrl, 'avatar.jpg');
+          } catch (error) {
+            console.warn('Failed to upload avatar:', error);
+            avatarFailed = true;
+          }
+        }
+      }
+
+      // Bot Picture: загружаем в Storage, если есть
+      if (botPicUrl) {
+        // Если это уже URL из Supabase Storage - используем как есть
+        if (botPicUrl.startsWith('https://') && botPicUrl.includes('supabase.co')) {
+          uploadedBotPicUrl = botPicUrl;
+        } else {
+          // Загружаем в Storage (base64 или любой другой формат)
+          try {
+            uploadedBotPicUrl = await uploadImage(botPicUrl, 'bot-picture.jpg');
+          } catch (error) {
+            console.warn('Failed to upload bot picture:', error);
+            botPicFailed = true;
+          }
+        }
+      }
+
+      // Собираем все данные с загруженными URL картинок (только URL, без base64!)
+      const shareData = {
+        username,
+        botName,
+        shortDescription,
+        description,
+        about,
+        privacyPolicyUrl,
+        firstMessageText,
+        inlineButtonText,
+        inlineButtonResponse,
+        avatarUrl: uploadedAvatarUrl,
+        botPicUrl: uploadedBotPicUrl,
+      };
+
+      // Вызываем RPC функцию share_create
+      const { data, error } = await supabase.rpc('share_create', {
+        payload_json: shareData
+      });
+
+      if (error) {
+        console.error('Supabase RPC error:', error);
+        throw new Error(error.message);
+      }
+
+      if (!data || !data.id || !data.secret) {
+        throw new Error('Invalid response from server');
+      }
+
+      const { id, secret } = data;
+
+      // Генерируем ссылку с секретом во fragment
+      const generatedShareUrl = `${window.location.origin}${window.location.pathname}#share=${id}.${secret}`;
+
+      // Показываем модалку со ссылкой
+      setShareUrl(generatedShareUrl);
+      setShowShareModal(true);
+
+      // Показываем уведомление с учетом того, какие картинки не загрузились
+      if (avatarFailed || botPicFailed) {
+        let warningText = '';
+        if (avatarFailed && botPicFailed) {
+          warningText = 'Аватар и картинка бота не загружены. Текстовые данные сохранены. Чтобы добавить картинки, загрузите их заново.';
+        } else if (avatarFailed) {
+          warningText = 'Аватар не загружен. Текстовые данные и картинка бота сохранены. Чтобы добавить аватар, загрузите его заново.';
+        } else {
+          warningText = 'Картинка бота не загружена. Текстовые данные и аватар сохранены. Чтобы добавить картинку, загрузите её заново.';
+        }
+        showWarning('Ссылка создана (без некоторых картинок)', warningText);
+      } else {
+        showSuccess('Ссылка создана', 'Действует 7 дней');
+      }
+    } catch (error) {
+      console.error('Failed to create share link:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось создать ссылку';
+      showWarning('Ошибка', errorMessage);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  // Общие пропсы для TelegramPhone
+  const telegramPhoneProps = {
+    username,
+    botName,
+    shortDescription,
+    description,
+    about,
+    privacyPolicyUrl,
+    avatar: avatarUrl || undefined,
+    botPic: botPicUrl || undefined,
+    focusedField,
+    highlightField,
+    showBotPicPlaceholder,
+    showPrivacyPolicyPlaceholder,
+    showFirstMessagePlaceholder,
+    showInlineButtonPlaceholder,
+    highlightAvatar,
+    avatarError,
+    avatarWarning,
+    onFieldHover: handlePreviewFieldHover,
+    firstMessage: firstMessageText
+      ? {
+          text: firstMessageText,
+          inlineButton: inlineButtonText
+            ? {
+                text: inlineButtonText,
+                response: inlineButtonResponse,
+              }
+            : undefined,
+        }
+      : undefined,
+    formData: {
+      username,
+      botName,
+      shortDescription,
+      description,
+      about,
+      privacyPolicyUrl,
+      firstMessageText,
+      inlineButtonText,
+      inlineButtonResponse,
+      avatarUrl,
+      botPicUrl
+    },
+    onDownload: handleExport
+  };
+
   return (
     <>
-      <MobileBlocker />
+      {/* Loading Overlay для загрузки share-данных */}
+      {isHydrating && window.location.hash.startsWith('#share=') && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md mx-4 text-center">
+            <div className="mb-4">
+              <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Загрузка конфигурации...</h2>
+            <p className="text-sm text-gray-600">Получаем данные из публичной ссылки</p>
+          </div>
+        </div>
+      )}
 
+      {/* MOBILE LAYOUT (< 1024px) */}
+      <div className="min-h-screen bg-gray-50 lg:hidden flex flex-col">
+        {/* Mobile Header */}
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-gray-900">
+            TG Bot Setup
+          </h1>
+          <span className="text-xs text-gray-400">v{packageJson.version}</span>
+        </header>
+
+        {/* Tabs */}
+        <MobileTabs
+          activeTab={mobileActiveTab}
+          onTabChange={setMobileActiveTab}
+        />
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto">
+          {mobileActiveTab === 'form' && (
+            <div className="p-4 pb-24">
+              {/* Демо/Импорт/Поделиться/Очистить кнопки */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setUsername('example_conf_bot');
+                    setBotName('Ассистент Конференции');
+                    setShortDescription('Помощник участника конференции');
+                    setDescription(`Добро пожаловать!\n\nЯ помогу вам:\n📋 Узнать программу\n🎤 Найти спикеров\n📍 Сориентироваться`);
+                    setAbout('Официальный бот конференции');
+                    setPrivacyPolicyUrl('https://example.com/privacy');
+                    setFirstMessageText('Добро пожаловать!\n\nНажмите кнопку ниже.');
+                    setInlineButtonText('📋 Программа');
+                    setInlineButtonResponse('Программа конференции\n\n9:00 — Регистрация\n10:00 — Открытие');
+                    setAvatarUrl(generateDemoAvatar());
+                    setBotPicUrl(generateDemoBotPic());
+                  }}
+                  className="px-3 py-2 text-sm border border-blue-300 text-blue-600 rounded-lg"
+                >
+                  Демо
+                </button>
+                <button
+                  onClick={handleImportClick}
+                  className="px-3 py-2 text-sm border border-green-300 text-green-600 rounded-lg"
+                >
+                  Импорт
+                </button>
+                <button
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className={`px-3 py-2 text-sm border rounded-lg flex items-center justify-center gap-2 ${
+                    isSharing
+                      ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                      : 'border-purple-300 text-purple-600'
+                  }`}
+                >
+                  {isSharing && (
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {isSharing ? 'Загрузка...' : 'Поделиться'}
+                </button>
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="px-3 py-2 text-sm border border-gray-300 text-gray-600 rounded-lg"
+                >
+                  Очистить
+                </button>
+              </div>
+
+              {/* Форма - упрощённая для мобильных */}
+              <div className="space-y-4">
+                {/* Имя бота */}
+                <div>
+                  <input
+                    type="text"
+                    value={botName}
+                    onChange={(e) => setBotName(e.target.value)}
+                    placeholder="Имя бота"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  <div className="text-right text-xs text-gray-400 mt-1">{botName.length}/64</div>
+                </div>
+
+                {/* Короткое описание */}
+                <div>
+                  <input
+                    type="text"
+                    value={shortDescription}
+                    onChange={(e) => setShortDescription(e.target.value)}
+                    placeholder="Короткое описание"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  <div className="text-right text-xs text-gray-400 mt-1">{shortDescription.length}/120</div>
+                </div>
+
+                {/* Аватар */}
+                <AvatarUpload
+                  avatarUrl={avatarUrl}
+                  onAvatarChange={handleAvatarChange}
+                  onValidationChange={(err, warn) => {
+                    setAvatarError(err);
+                    setAvatarWarning(warn);
+                  }}
+                />
+
+                {/* О боте */}
+                <div>
+                  <input
+                    type="text"
+                    value={about}
+                    onChange={(e) => setAbout(e.target.value)}
+                    placeholder="О боте"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  <div className="text-right text-xs text-gray-400 mt-1">{about.length}/120</div>
+                </div>
+
+                {/* Username */}
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="username_bot"
+                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </div>
+
+                {/* Description Picture */}
+                <BotPicUpload
+                  botPicUrl={botPicUrl}
+                  onBotPicChange={handleBotPicChange}
+                />
+
+                {/* Описание */}
+                <div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Описание (что умеет бот)"
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  />
+                  <div className="text-right text-xs text-gray-400 mt-1">{description.length}/512</div>
+                </div>
+
+                {/* Первое сообщение */}
+                <div>
+                  <textarea
+                    value={firstMessageText}
+                    onChange={(e) => setFirstMessageText(e.target.value)}
+                    placeholder="Первое сообщение (опционально)"
+                    rows={2}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  />
+                </div>
+
+                {/* Inline кнопка */}
+                <div>
+                  <input
+                    type="text"
+                    value={inlineButtonText}
+                    onChange={(e) => setInlineButtonText(e.target.value)}
+                    placeholder="Текст кнопки (опционально)"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </div>
+
+                {inlineButtonText && (
+                  <div>
+                    <textarea
+                      value={inlineButtonResponse}
+                      onChange={(e) => setInlineButtonResponse(e.target.value)}
+                      placeholder="Ответ на кнопку"
+                      rows={2}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mobileActiveTab === 'preview' && (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-50 to-indigo-100 pt-4">
+              {/* Mode Switcher */}
+              <MobilePreviewSwitcher
+                mode={mobilePreviewMode}
+                onModeChange={setMobilePreviewMode}
+              />
+
+              {/* Phone Preview */}
+              <div className="flex-1 flex items-center justify-center px-4 pb-24">
+                <TelegramPhone
+                  {...telegramPhoneProps}
+                  isMobile={true}
+                  externalMode={mobilePreviewMode}
+                  onModeChange={setMobilePreviewMode}
+                />
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Fixed Download Button */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+          <button
+            onClick={handleExport}
+            disabled={isHydrating || isSharing}
+            className={`w-full py-3 rounded-xl font-medium shadow-lg transition-transform ${
+              isHydrating || isSharing
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-green-600 text-white active:scale-[0.98]'
+            }`}
+          >
+            📦 Скачать архив
+          </button>
+        </div>
+      </div>
+
+      {/* DESKTOP LAYOUT (>= 1024px) */}
       <div className="min-h-screen bg-gray-50 hidden lg:block">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between">
@@ -710,13 +1334,51 @@ function App() {
                       setAvatarUrl(generateDemoAvatar());
                       setBotPicUrl(generateDemoBotPic());
                     }}
-                    className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg transition-all duration-200 cursor-pointer btn-demo"
+                    disabled={isHydrating || isSharing}
+                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 ${
+                      isHydrating || isSharing
+                        ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'border-blue-300 text-blue-600 cursor-pointer btn-demo'
+                    }`}
                   >
                     Демо-данные
                   </button>
                   <button
+                    onClick={handleImportClick}
+                    disabled={isHydrating || isSharing}
+                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 ${
+                      isHydrating || isSharing
+                        ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'border-green-300 text-green-600 cursor-pointer btn-import'
+                    }`}
+                  >
+                    Импорт
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    disabled={isSharing || isHydrating}
+                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                      isSharing || isHydrating
+                        ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'border-purple-300 text-purple-600 cursor-pointer btn-share'
+                    }`}
+                  >
+                    {isSharing && (
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {isSharing ? 'Загрузка...' : 'Поделиться'}
+                  </button>
+                  <button
                     onClick={() => setShowClearConfirm(true)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 text-gray-600 rounded-lg transition-all duration-200 cursor-pointer btn-clear"
+                    disabled={isHydrating || isSharing}
+                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 ${
+                      isHydrating || isSharing
+                        ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'border-gray-300 text-gray-600 cursor-pointer btn-clear'
+                    }`}
                   >
                     Очистить
                   </button>
@@ -1189,6 +1851,57 @@ function App() {
         hasActiveToast={toasts.length > 0}
         hasError={saveError}
       />
+
+      {/* Hidden file input for importing ZIP archives */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".zip"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+
+      {/* Share Link Modal */}
+      {showShareModal && shareUrl && (
+        <div
+          onClick={() => setShowShareModal(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl p-6 shadow-2xl max-w-md w-full"
+          >
+            <h2 className="text-xl font-bold text-gray-900 mb-4">🔗 Ссылка создана!</h2>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Поделитесь этой ссылкой с коллегами. Действует 7 дней.
+            </p>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+              <code className="text-sm text-gray-800 break-all">{shareUrl}</code>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(shareUrl);
+                  showSuccess('Скопировано', 'Ссылка скопирована в буфер обмена');
+                  setShowShareModal(false);
+                }}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                📋 Копировать
+              </button>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

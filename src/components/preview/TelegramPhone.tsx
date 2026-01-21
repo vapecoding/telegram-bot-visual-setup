@@ -6,6 +6,8 @@ import { FirstMessage } from './FirstMessage';
 import { FieldHelp } from './FieldHelp';
 import { DownloadModal } from '../DownloadModal';
 
+export type PreviewMode = 'chatlist' | 'profile' | 'dialog';
+
 interface TelegramPhoneProps {
   username: string;
   botName: string;
@@ -47,9 +49,11 @@ interface TelegramPhoneProps {
     botPicUrl: string | null;
   };
   onDownload?: () => void;
+  // Mobile mode props
+  isMobile?: boolean;
+  externalMode?: PreviewMode;
+  onModeChange?: (mode: PreviewMode) => void;
 }
-
-type PreviewMode = 'chatlist' | 'profile' | 'dialog';
 
 export function TelegramPhone({
   username,
@@ -72,9 +76,24 @@ export function TelegramPhone({
   onFieldHover,
   firstMessage,
   formData,
-  onDownload
+  onDownload,
+  isMobile = false,
+  externalMode,
+  onModeChange
 }: TelegramPhoneProps) {
-  const [mode, setMode] = useState<PreviewMode>('chatlist');
+  const [internalMode, setInternalMode] = useState<PreviewMode>('chatlist');
+
+  // Используем внешний режим если передан, иначе внутренний
+  const mode = externalMode ?? internalMode;
+
+  // Функция смены режима - использует внешний callback или внутренний state
+  const setMode = (newMode: PreviewMode) => {
+    if (onModeChange) {
+      onModeChange(newMode);
+    } else {
+      setInternalMode(newMode);
+    }
+  };
   const [userClickedStart, setUserClickedStart] = useState(false); // Физический клик по START
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [dialogInteracted, setDialogInteracted] = useState(false); // "Липкое" состояние диалога
@@ -139,7 +158,99 @@ export function TelegramPhone({
   // На ultrawide (1260px высота): 75vh ≈ 945px → clamp ограничит до 750px max
   // На маленьких: min 600px
   const phoneHeight = 'clamp(600px, 75vh, 750px)';
+  const mobilePhoneHeight = 'min(60vh, 500px)';
 
+  // Общий контент телефона (переиспользуется в обоих режимах)
+  const phoneContent = (
+    <>
+      {mode === 'chatlist' && (
+        <div key="chatlist" className="preview-screen-enter h-full">
+          <ChatListItem
+            botName={botName}
+            shortDescription={shortDescription}
+            avatar={avatar}
+            highlightAvatar={highlightAvatar}
+            focusedField={highlightField}
+            onFieldHover={onFieldHover}
+          />
+        </div>
+      )}
+
+      {mode === 'profile' && (
+        <div key="profile" className="preview-screen-enter h-full">
+          <BotProfile
+            username={username}
+            botName={botName}
+            about={about}
+            privacyPolicyUrl={privacyPolicyUrl}
+            avatar={avatar}
+            highlightAvatar={highlightAvatar}
+            focusedField={highlightField}
+            onFieldHover={onFieldHover}
+            showPrivacyPolicyPlaceholder={showPrivacyPolicyPlaceholder}
+          />
+        </div>
+      )}
+
+      {mode === 'dialog' && !showFirstMessage && (
+        <div key="dialog-start" className="preview-screen-enter h-full">
+          <ChatStart
+            botName={botName}
+            description={description}
+            avatar={avatar}
+            highlightAvatar={highlightAvatar}
+            botPic={botPic}
+            showBotPicPlaceholder={showBotPicPlaceholder}
+            onStartClick={handleStartClick}
+            focusedField={highlightField}
+            onFieldHover={onFieldHover}
+          />
+        </div>
+      )}
+
+      {mode === 'dialog' && showFirstMessage && (
+        <div key="dialog-message" className="preview-screen-enter h-full">
+          <FirstMessage
+            botName={botName}
+            description={description}
+            text={firstMessage?.text || ''}
+            inlineButton={firstMessage?.inlineButton}
+            avatar={avatar}
+            highlightAvatar={highlightAvatar}
+            botPic={botPic}
+            showBotPicPlaceholder={showBotPicPlaceholder}
+            showFirstMessagePlaceholder={showFirstMessagePlaceholder}
+            showInlineButtonPlaceholder={showInlineButtonPlaceholder}
+            focusedField={highlightField}
+            onFieldHover={onFieldHover}
+            permanentMode={userClickedStart}
+            stickyMode={dialogInteracted}
+          />
+        </div>
+      )}
+    </>
+  );
+
+  // Мобильная версия: только телефон без боковой панели
+  if (isMobile) {
+    return (
+      <div className="flex justify-center items-center w-full">
+        <div
+          className="bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl overflow-hidden"
+          style={{
+            height: mobilePhoneHeight,
+            width: `calc(${mobilePhoneHeight} * 10 / 19.5)`
+          }}
+        >
+          <div className="bg-white rounded-[2rem] overflow-hidden h-full w-full">
+            {phoneContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop версия
   return (
     <div className="flex gap-6 items-start w-full pl-6 pr-8" style={{ height: phoneHeight }}>
       {/* Vertical Mode Switcher - Left Side - flexible width with limits */}
@@ -209,72 +320,7 @@ export function TelegramPhone({
           }}
         >
           <div className="bg-white rounded-[2.5rem] overflow-hidden h-full w-full">
-            {/* Content */}
-            {mode === 'chatlist' && (
-              <div key="chatlist" className="preview-screen-enter h-full">
-                <ChatListItem
-                  botName={botName}
-                  shortDescription={shortDescription}
-                  avatar={avatar}
-                  highlightAvatar={highlightAvatar}
-                  focusedField={highlightField}
-                  onFieldHover={onFieldHover}
-                />
-              </div>
-            )}
-
-            {mode === 'profile' && (
-              <div key="profile" className="preview-screen-enter h-full">
-                <BotProfile
-                  username={username}
-                  botName={botName}
-                  about={about}
-                  privacyPolicyUrl={privacyPolicyUrl}
-                  avatar={avatar}
-                  highlightAvatar={highlightAvatar}
-                  focusedField={highlightField}
-                  onFieldHover={onFieldHover}
-                  showPrivacyPolicyPlaceholder={showPrivacyPolicyPlaceholder}
-                />
-              </div>
-            )}
-
-            {mode === 'dialog' && !showFirstMessage && (
-              <div key="dialog-start" className="preview-screen-enter h-full">
-                <ChatStart
-                  botName={botName}
-                  description={description}
-                  avatar={avatar}
-                  highlightAvatar={highlightAvatar}
-                  botPic={botPic}
-                  showBotPicPlaceholder={showBotPicPlaceholder}
-                  onStartClick={handleStartClick}
-                  focusedField={highlightField}
-                  onFieldHover={onFieldHover}
-                />
-              </div>
-            )}
-
-            {mode === 'dialog' && showFirstMessage && (
-              <div key="dialog-message" className="preview-screen-enter h-full">
-                <FirstMessage
-                  botName={botName}
-                  description={description}
-                  text={firstMessage?.text || ''}
-                  inlineButton={firstMessage?.inlineButton}
-                  avatar={avatar}
-                  highlightAvatar={highlightAvatar}
-                  botPic={botPic}
-                  showBotPicPlaceholder={showBotPicPlaceholder}
-                  showFirstMessagePlaceholder={showFirstMessagePlaceholder}
-                  showInlineButtonPlaceholder={showInlineButtonPlaceholder}
-                  focusedField={highlightField}
-                  onFieldHover={onFieldHover}
-                  permanentMode={userClickedStart}
-                  stickyMode={dialogInteracted}
-                />
-              </div>
-            )}
+            {phoneContent}
           </div>
         </div>
       </div>

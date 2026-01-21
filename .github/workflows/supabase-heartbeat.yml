@@ -1,0 +1,28 @@
+name: Supabase Heartbeat
+
+on:
+  schedule:
+    # Runs twice a week: Monday and Thursday at 3:00 AM UTC
+    - cron: '0 3 * * 1,4'
+  workflow_dispatch: # Allows manual trigger from Actions tab
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send heartbeat ping to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # Send a test request to share_get with non-existent ID
+          # This keeps the Supabase project active on free tier
+          curl -X POST "$SUPABASE_URL/rest/v1/rpc/share_get" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"share_id": "00000000-0000-0000-0000-000000000000", "share_secret": "heartbeat"}' \
+            || echo "Heartbeat sent (expected error is OK)"
+
+      - name: Log heartbeat result
+        run: echo "Supabase heartbeat completed at $(date)"

@@ -15,6 +15,7 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   // Уведомляем родителя об изменении валидации
   useEffect(() => {
@@ -55,8 +56,12 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
     if (!avatarUrl) {
       setImageInfo(null);
       setWarning(null);
+      setIsImageLoading(false);
       return;
     }
+
+    // Начинаем загрузку
+    setIsImageLoading(true);
 
     const img = new Image();
     img.onload = () => {
@@ -81,6 +86,11 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
       } else {
         setWarning(null);
       }
+
+      setIsImageLoading(false);
+    };
+    img.onerror = () => {
+      setIsImageLoading(false);
     };
     img.src = avatarUrl;
   }, [avatarUrl]);
@@ -282,13 +292,20 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
             {/* Avatar Preview */}
             <div
               onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
-              className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity relative"
               title="Нажмите для просмотра в полном размере"
             >
+              {isImageLoading && (
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+              )}
               <img
                 src={avatarUrl}
                 alt="Avatar preview"
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity duration-200 ${
+                  isImageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+                onLoad={() => setIsImageLoading(false)}
+                onError={() => setIsImageLoading(false)}
               />
             </div>
 
@@ -361,12 +378,19 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
             </button>
 
             {/* Image */}
-            <img
-              src={avatarUrl}
-              alt="Avatar full size"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="relative">
+              {isImageLoading && (
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 rounded-lg shadow-2xl animate-pulse min-w-[200px] min-h-[200px]" />
+              )}
+              <img
+                src={avatarUrl}
+                alt="Avatar full size"
+                className={`max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl transition-opacity duration-200 ${
+                  isImageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
 
             {/* Image info */}
             {imageInfo && (

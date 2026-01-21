@@ -12,6 +12,7 @@ interface BotPicUploadProps {
 export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart, onHoverEnd }: BotPicUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageInfo, setImageInfo] = useState<{
     width: number;
     height: number;
@@ -31,8 +32,12 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
   useEffect(() => {
     if (!botPicUrl) {
       setImageInfo(null);
+      setIsImageLoading(false);
       return;
     }
+
+    // Начинаем загрузку
+    setIsImageLoading(true);
 
     const img = new Image();
     img.onload = () => {
@@ -42,6 +47,10 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
         height: img.height,
         size
       });
+      setIsImageLoading(false);
+    };
+    img.onerror = () => {
+      setIsImageLoading(false);
     };
     img.src = botPicUrl;
   }, [botPicUrl]);
@@ -214,10 +223,17 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
             {/* BotPic Preview */}
             <div className="w-48 flex-shrink-0">
               <div className="relative" style={{ aspectRatio: '16 / 9' }}>
+                {isImageLoading && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-lg animate-pulse" />
+                )}
                 <img
                   src={botPicUrl}
                   alt="BotPic preview"
-                  className="w-full h-full object-cover rounded-lg"
+                  className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${
+                    isImageLoading ? 'opacity-0' : 'opacity-100'
+                  }`}
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={() => setIsImageLoading(false)}
                 />
               </div>
             </div>
