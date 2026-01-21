@@ -313,6 +313,7 @@ function App() {
   const [isSharing, setIsSharing] = useState(false); // Состояние загрузки для кнопки "Поделиться"
   const [shareUrl, setShareUrl] = useState<string | null>(null); // URL для модалки
   const [showShareModal, setShowShareModal] = useState(false); // Показ модалки со ссылкой
+  const [showChangelogModal, setShowChangelogModal] = useState(false); // Показ модалки с историей версий
 
   // Toast уведомления
   const { toasts, dismissToast, showSuccess, showWarning, showInfo } = useToast();
@@ -1044,7 +1045,13 @@ function App() {
           <h1 className="text-lg font-bold text-gray-900">
             TG Bot Setup
           </h1>
-          <span className="text-xs text-gray-400">v{packageJson.version}</span>
+          <span
+            onClick={() => setShowChangelogModal(true)}
+            className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+            title="История версий"
+          >
+            v{packageJson.version}
+          </span>
         </header>
 
         {/* Tabs */}
@@ -1273,7 +1280,13 @@ function App() {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-gray-400">v{packageJson.version}</span>
+            <span
+              onClick={() => setShowChangelogModal(true)}
+              className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+              title="История версий"
+            >
+              v{packageJson.version}
+            </span>
             <span>•</span>
             <span>Автор: Андрей Погорелый</span>
             <span>•</span>
@@ -1895,6 +1908,111 @@ function App() {
               <button
                 onClick={() => setShowShareModal(false)}
                 className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Changelog Modal */}
+      {showChangelogModal && (
+        <div
+          onClick={() => setShowChangelogModal(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl p-6 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+          >
+            <h2 className="text-xl font-bold text-gray-900 mb-4">📜 История версий</h2>
+
+            <div className="space-y-4">
+              {/* v1.2.0 */}
+              <div className="border-l-4 border-blue-500 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.2.0</span>
+                  <span className="text-xs text-gray-500">• текущая версия</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Функция "Поделиться" с загрузкой конфигурации по ссылке (7 дней)</li>
+                  <li>Интеграция с Supabase для хранения картинок</li>
+                  <li>Улучшенные hover-эффекты и подсветка полей</li>
+                  <li>Анимации загрузки изображений (skeleton)</li>
+                  <li>История версий (changelog modal)</li>
+                </ul>
+              </div>
+
+              {/* v1.1.0 */}
+              <div className="border-l-4 border-gray-300 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.1.0</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Оптимизация hover событий с throttle (50ms)</li>
+                  <li>Задержка 2 сек перед скрытием подсказок полей</li>
+                  <li>Автоскролл к новым элементам превью</li>
+                  <li>Placeholder для пустых полей "Первое сообщение" и "Inline кнопка"</li>
+                  <li>Улучшенные анимации и переходы для подсветки</li>
+                  <li>Адаптивный layout для ultrawide мониторов</li>
+                  <li>Дизайн-токены и унифицированные анимации</li>
+                </ul>
+              </div>
+
+              {/* v1.0.3 */}
+              <div className="border-l-4 border-gray-300 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.0.3</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Preload фона чата для ускорения загрузки</li>
+                </ul>
+              </div>
+
+              {/* v1.0.2 */}
+              <div className="border-l-4 border-gray-300 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.0.2</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Исправлена ссылка на GitHub Pages зеркало</li>
+                </ul>
+              </div>
+
+              {/* v1.0.1 */}
+              <div className="border-l-4 border-gray-300 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.0.1</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Обновлены демо-данные</li>
+                </ul>
+              </div>
+
+              {/* v1.0.0 */}
+              <div className="border-l-4 border-green-500 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.0.0</span>
+                  <span className="text-xs text-green-600 font-medium">• первый релиз</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Визуальная настройка Telegram бота</li>
+                  <li>Live превью с интерактивным диалогом</li>
+                  <li>Загрузка аватара и description picture</li>
+                  <li>Валидация полей по требованиям Telegram API</li>
+                  <li>Автосохранение в IndexedDB</li>
+                  <li>Экспорт в ZIP архив</li>
+                  <li>Подсветка полей при hover</li>
+                  <li>Toast уведомления</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowChangelogModal(false)}
+                className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
                 Закрыть
               </button>
