@@ -40,10 +40,9 @@ npm run build
 
 ## Документация
 
-- [TDD_v2_EXTENDED.md](docs/TDD_v2_EXTENDED.md) — актуальная техническая документация
-- [projectGoal.md](docs/projectGoal.md) — цель проекта и статус реализации
-- [TECH_IDEAS.md](docs/TECH_IDEAS.md) — идеи технологий для изучения
-- [TDD_LIGHT_ORIGINAL.md](docs/TDD_LIGHT_ORIGINAL.md) — оригинальный TDD (исторический)
+- [TDD_v2_EXTENDED.md](docs/TDD_v2_EXTENDED.md) — техническая документация
+- [TECH_IDEAS.md](docs/TECH_IDEAS.md) — идеи для развития
+- [origIdea.md](docs/origIdea.md) — оригинальная идея проекта
 
 ## Лицензия
 

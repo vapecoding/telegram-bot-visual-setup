@@ -49,6 +49,9 @@ interface TelegramPhoneProps {
     botPicUrl: string | null;
   };
   onDownload?: () => void;
+  // Share props
+  onShare?: () => void;
+  isSharing?: boolean;
   // Mobile mode props
   isMobile?: boolean;
   externalMode?: PreviewMode;
@@ -77,6 +80,8 @@ export function TelegramPhone({
   firstMessage,
   formData,
   onDownload,
+  onShare,
+  isSharing = false,
   isMobile = false,
   externalMode,
   onModeChange
@@ -253,8 +258,8 @@ export function TelegramPhone({
   // Desktop версия
   return (
     <div className="flex gap-6 items-start w-full pl-6 pr-8" style={{ height: phoneHeight }}>
-      {/* Vertical Mode Switcher - Left Side - flexible width with limits */}
-      <div className="flex flex-col gap-3 pt-4 flex-shrink-0" style={{ height: '100%', width: 'clamp(215px, 30%, 385px)' }}>
+      {/* Vertical Mode Switcher - Left Side - relative for absolute positioning of buttons */}
+      <div className="relative flex flex-col gap-3 pt-4 pb-28 flex-shrink-0" style={{ height: '100%', width: 'clamp(215px, 30%, 385px)' }}>
         {/* Mode buttons - fixed width */}
         <button
           onClick={() => handleModeChange('chatlist')}
@@ -289,24 +294,53 @@ export function TelegramPhone({
 
         {/* Field Help Block - takes full column width */}
         <div className="mt-4 w-full">
-          <FieldHelp
-            focusedField={focusedField}
-            avatarError={avatarError}
-            avatarWarning={avatarWarning}
-          />
+          <FieldHelp focusedField={focusedField} />
         </div>
 
-        {/* Spacer to push download button to bottom */}
-        <div className="flex-1" />
-
-        {/* Download Button - fixed width like mode buttons */}
+        {/* Action Buttons - Absolutely positioned at bottom */}
         {formData && (
-          <button
-            onClick={() => setShowDownloadModal(true)}
-            className="w-[180px] px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap text-left font-medium cursor-pointer bg-green-600 text-white shadow-md active:scale-95 btn-download"
-          >
-            📦 Скачать архив
-          </button>
+          <div className="absolute bottom-0 left-0 flex flex-col gap-3">
+            {/* Share Button - PRIMARY (gradient, prominent) */}
+            {onShare && (
+              <button
+                onClick={onShare}
+                disabled={isSharing}
+                className={`w-[180px] px-5 py-4 text-base rounded-xl transition-all duration-200 whitespace-nowrap font-semibold flex items-center justify-center gap-2 ${
+                  isSharing
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-indigo-700 cursor-pointer active:scale-95'
+                }`}
+              >
+                {isSharing ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Загрузка...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span>Поделиться</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Download Button - SECONDARY (text link style) */}
+            <button
+              onClick={() => setShowDownloadModal(true)}
+              className="w-[180px] px-5 py-3 text-sm transition-all duration-200 whitespace-nowrap font-medium cursor-pointer text-gray-600 hover:text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-100 rounded-lg active:scale-95"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Скачать архив</span>
+            </button>
+          </div>
         )}
       </div>
 

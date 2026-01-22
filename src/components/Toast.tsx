@@ -124,8 +124,13 @@ export function SaveIndicator({ saveCount, hasActiveToast, hasError }: SaveIndic
   const [animate, setAnimate] = useState(false);
 
   // Показ успешного сохранения (временный)
+  // Реагируем ТОЛЬКО на изменение saveCount, не на hasActiveToast
+  // Иначе индикатор появится после закрытия любого toast'а
   useEffect(() => {
-    if (saveCount > 0 && !hasActiveToast && !hasError) {
+    if (saveCount > 0 && !hasError) {
+      // Если сейчас есть toast, просто пропускаем показ индикатора
+      if (hasActiveToast) return;
+
       setShow(true);
       setAnimate(false);
       requestAnimationFrame(() => {
@@ -139,7 +144,8 @@ export function SaveIndicator({ saveCount, hasActiveToast, hasError }: SaveIndic
 
       return () => clearTimeout(hideTimer);
     }
-  }, [saveCount, hasActiveToast, hasError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveCount, hasError]);
 
   // Ошибка - показать постоянно
   if (hasError) {

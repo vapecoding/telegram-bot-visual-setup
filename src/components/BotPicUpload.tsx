@@ -28,6 +28,17 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
     return Math.floor((base64.length * 3) / 4) - padding;
   };
 
+  // Получение размера файла по URL через fetch
+  const getUrlFileSize = async (url: string): Promise<number> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      const contentLength = response.headers.get('Content-Length');
+      return contentLength ? parseInt(contentLength, 10) : 0;
+    } catch {
+      return 0;
+    }
+  };
+
   // Пересчёт imageInfo при внешнем изменении botPicUrl (восстановление из IndexedDB)
   useEffect(() => {
     if (!botPicUrl) {
@@ -40,8 +51,15 @@ export function BotPicUpload({ botPicUrl, onBotPicChange, onFocus, onHoverStart,
     setIsImageLoading(true);
 
     const img = new Image();
-    img.onload = () => {
-      const size = getDataUrlSize(botPicUrl);
+    img.onload = async () => {
+      // Вычисляем размер: для data URL из base64, для http(s) через fetch
+      let size = 0;
+      if (botPicUrl.startsWith('data:')) {
+        size = getDataUrlSize(botPicUrl);
+      } else if (botPicUrl.startsWith('http')) {
+        size = await getUrlFileSize(botPicUrl);
+      }
+
       setImageInfo({
         width: img.width,
         height: img.height,

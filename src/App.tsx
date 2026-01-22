@@ -7,8 +7,9 @@ import { BotPicUpload } from './components/BotPicUpload';
 import { ToastContainer, SaveIndicator, useToast } from './components/Toast';
 import { MobileTabs } from './components/MobileTabs';
 import { MobilePreviewSwitcher } from './components/MobilePreviewSwitcher';
-// validateBotSettings используется в DownloadModal
+import { ValidationModal } from './components/ValidationModal';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
+import { canShare, incrementShareCount, getShareLimitInfo, SHARE_DAILY_LIMIT } from './utils/shareLimit';
 import packageJson from '../package.json';
 import { supabase } from './lib/supabase';
 import { uploadImage } from './lib/imageUpload';
@@ -265,6 +266,7 @@ function App() {
   const [hoveredField, setHoveredField] = useState<string | null>(null);
   const [inputFocusedField, setInputFocusedField] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDemoConfirm, setShowDemoConfirm] = useState(false);
   const [showBotPicPlaceholder, setShowBotPicPlaceholder] = useState(false);
   const [showPrivacyPolicyPlaceholder, setShowPrivacyPolicyPlaceholder] = useState(false);
   const [showFirstMessagePlaceholder, setShowFirstMessagePlaceholder] = useState(false);
@@ -314,6 +316,8 @@ function App() {
   const [shareUrl, setShareUrl] = useState<string | null>(null); // URL для модалки
   const [showShareModal, setShowShareModal] = useState(false); // Показ модалки со ссылкой
   const [showChangelogModal, setShowChangelogModal] = useState(false); // Показ модалки с историей версий
+  const [showShareValidationModal, setShowShareValidationModal] = useState(false); // Validation перед share
+  const [showDownloadValidationModal, setShowDownloadValidationModal] = useState(false); // Validation перед download
 
   // Toast уведомления
   const { toasts, dismissToast, showSuccess, showWarning, showInfo } = useToast();
@@ -376,13 +380,14 @@ function App() {
   // Закрытие модального окна по ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showClearConfirm) {
-        setShowClearConfirm(false);
+      if (e.key === 'Escape') {
+        if (showClearConfirm) setShowClearConfirm(false);
+        if (showDemoConfirm) setShowDemoConfirm(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showClearConfirm]);
+  }, [showClearConfirm, showDemoConfirm]);
 
   // Скролл к полю формы при наведении на превью
   useEffect(() => {
@@ -867,9 +872,25 @@ function App() {
     }
   };
 
-  // Обработка создания публичной ссылки для шаринга
-  const handleShare = async () => {
-    if (isSharing) return; // Предотвращаем повторные клики
+  // Проверка лимита и показ модалки валидации перед шарингом
+  const handleShare = () => {
+    // Проверяем дневной лимит
+    const limitCheck = canShare();
+    if (!limitCheck.allowed) {
+      showWarning(
+        'Лимит исчерпан',
+        `Вы создали ${SHARE_DAILY_LIMIT} ссылок сегодня. Попробуйте завтра.`
+      );
+      return;
+    }
+
+    // Показываем модалку валидации
+    setShowShareValidationModal(true);
+  };
+
+  // Фактическое создание публичной ссылки (вызывается после подтверждения в модалке)
+  const performShare = async () => {
+    if (isSharing) return;
 
     try {
       setIsSharing(true);
@@ -882,11 +903,9 @@ function App() {
 
       // Avatar: загружаем в Storage, если есть
       if (avatarUrl) {
-        // Если это уже URL из Supabase Storage - используем как есть
         if (avatarUrl.startsWith('https://') && avatarUrl.includes('supabase.co')) {
           uploadedAvatarUrl = avatarUrl;
         } else {
-          // Загружаем в Storage (base64 или любой другой формат)
           try {
             uploadedAvatarUrl = await uploadImage(avatarUrl, 'avatar.jpg');
           } catch (error) {
@@ -898,11 +917,9 @@ function App() {
 
       // Bot Picture: загружаем в Storage, если есть
       if (botPicUrl) {
-        // Если это уже URL из Supabase Storage - используем как есть
         if (botPicUrl.startsWith('https://') && botPicUrl.includes('supabase.co')) {
           uploadedBotPicUrl = botPicUrl;
         } else {
-          // Загружаем в Storage (base64 или любой другой формат)
           try {
             uploadedBotPicUrl = await uploadImage(botPicUrl, 'bot-picture.jpg');
           } catch (error) {
@@ -912,7 +929,7 @@ function App() {
         }
       }
 
-      // Собираем все данные с загруженными URL картинок (только URL, без base64!)
+      // Собираем все данные с загруженными URL картинок
       const shareData = {
         username,
         botName,
@@ -946,19 +963,23 @@ function App() {
       // Генерируем ссылку с секретом во fragment
       const generatedShareUrl = `${window.location.origin}${window.location.pathname}#share=${id}.${secret}`;
 
+      // Инкрементируем счётчик лимита ПОСЛЕ успешного создания
+      incrementShareCount();
+
       // Показываем модалку со ссылкой
       setShareUrl(generatedShareUrl);
       setShowShareModal(true);
+      setShowShareValidationModal(false);
 
-      // Показываем уведомление с учетом того, какие картинки не загрузились
+      // Показываем уведомление
       if (avatarFailed || botPicFailed) {
         let warningText = '';
         if (avatarFailed && botPicFailed) {
-          warningText = 'Аватар и картинка бота не загружены. Текстовые данные сохранены. Чтобы добавить картинки, загрузите их заново.';
+          warningText = 'Аватар и картинка бота не загружены. Текстовые данные сохранены.';
         } else if (avatarFailed) {
-          warningText = 'Аватар не загружен. Текстовые данные и картинка бота сохранены. Чтобы добавить аватар, загрузите его заново.';
+          warningText = 'Аватар не загружен. Текстовые данные и картинка бота сохранены.';
         } else {
-          warningText = 'Картинка бота не загружена. Текстовые данные и аватар сохранены. Чтобы добавить картинку, загрузите её заново.';
+          warningText = 'Картинка бота не загружена. Текстовые данные и аватар сохранены.';
         }
         showWarning('Ссылка создана (без некоторых картинок)', warningText);
       } else {
@@ -970,6 +991,80 @@ function App() {
       showWarning('Ошибка', errorMessage);
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  // Показ модалки валидации перед скачиванием
+  const handleDownload = () => {
+    setShowDownloadValidationModal(true);
+  };
+
+  // Фактическое скачивание (вызывается после подтверждения)
+  const performDownload = () => {
+    setShowDownloadValidationModal(false);
+    handleExport();
+  };
+
+  // Проверка, пуста ли форма
+  const isFormEmpty = () => {
+    return (
+      !username.trim() &&
+      !botName.trim() &&
+      !shortDescription.trim() &&
+      !description.trim() &&
+      !about.trim() &&
+      !privacyPolicyUrl.trim() &&
+      !firstMessageText.trim() &&
+      !inlineButtonText.trim() &&
+      !inlineButtonResponse.trim() &&
+      !avatarUrl &&
+      !botPicUrl
+    );
+  };
+
+  // Загрузка демо-данных
+  const loadDemoData = () => {
+    setUsername('example_conf_bot');
+    setBotName('Ассистент Конференции');
+    setShortDescription('Помощник участника конференции');
+    setDescription(`Добро пожаловать!
+
+Я помогу вам:
+📋 Узнать программу мероприятия
+🎤 Найти информацию о спикерах
+📍 Сориентироваться по площадке
+❓ Ответить на частые вопросы
+
+Выберите нужный раздел в меню или напишите вопрос`);
+    setAbout('Официальный бот конференции · t.me/example_link');
+    setPrivacyPolicyUrl('https://example.com/privacy');
+    setFirstMessageText(`Добро пожаловать!
+
+Нажмите кнопку ниже, чтобы узнать программу.`);
+    setInlineButtonText('📋 Программа');
+    setInlineButtonResponse(`Программа конференции
+
+9:00 — Регистрация, кофе
+10:00 — Открытие, приветствие
+10:30 — Основной доклад
+12:00 — Перерыв
+12:30 — Секционные выступления
+14:00 — Обед
+15:00 — Воркшопы
+17:00 — Нетворкинг`);
+    setAvatarUrl(generateDemoAvatar());
+    setBotPicUrl(generateDemoBotPic());
+    setShowDemoConfirm(false);
+  };
+
+  // Обработчик клика на "Демо-данные"
+  const handleDemoClick = () => {
+    if (isFormEmpty()) {
+      // Форма пуста - загружаем сразу
+      loadDemoData();
+    } else {
+      // Есть данные - спрашиваем подтверждение
+      setShowDemoConfirm(true);
     }
   };
 
@@ -1017,7 +1112,7 @@ function App() {
       avatarUrl,
       botPicUrl
     },
-    onDownload: handleExport
+    onDownload: handleDownload
   };
 
   return (
@@ -1064,8 +1159,8 @@ function App() {
         <main className="flex-1 overflow-y-auto">
           {mobileActiveTab === 'form' && (
             <div className="p-4 pb-24">
-              {/* Демо/Импорт/Поделиться/Очистить кнопки */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              {/* Демо/Импорт/Очистить кнопки */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <button
                   onClick={() => {
                     setUsername('example_conf_bot');
@@ -1089,23 +1184,6 @@ function App() {
                   className="px-3 py-2 text-sm border border-green-300 text-green-600 rounded-lg"
                 >
                   Импорт
-                </button>
-                <button
-                  onClick={handleShare}
-                  disabled={isSharing}
-                  className={`px-3 py-2 text-sm border rounded-lg flex items-center justify-center gap-2 ${
-                    isSharing
-                      ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                      : 'border-purple-300 text-purple-600'
-                  }`}
-                >
-                  {isSharing && (
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  )}
-                  {isSharing ? 'Загрузка...' : 'Поделиться'}
                 </button>
                 <button
                   onClick={() => setShowClearConfirm(true)}
@@ -1251,19 +1329,40 @@ function App() {
           )}
         </main>
 
-        {/* Fixed Download Button */}
+        {/* Fixed Action Buttons */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-          <button
-            onClick={handleExport}
-            disabled={isHydrating || isSharing}
-            className={`w-full py-3 rounded-xl font-medium shadow-lg transition-transform ${
-              isHydrating || isSharing
-                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-green-600 text-white active:scale-[0.98]'
-            }`}
-          >
-            📦 Скачать архив
-          </button>
+          <div className="flex gap-2">
+            {/* Share Button - PRIMARY */}
+            <button
+              onClick={handleShare}
+              disabled={isHydrating || isSharing}
+              className={`flex-1 py-3 rounded-xl font-medium shadow-lg transition-transform flex items-center justify-center gap-2 ${
+                isHydrating || isSharing
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-blue-600 text-white active:scale-[0.98]'
+              }`}
+            >
+              {isSharing && (
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              {isSharing ? 'Загрузка...' : '🔗 Поделиться'}
+            </button>
+            {/* Download Button - SECONDARY */}
+            <button
+              onClick={handleExport}
+              disabled={isHydrating || isSharing}
+              className={`flex-1 py-3 rounded-xl font-medium transition-transform ${
+                isHydrating || isSharing
+                  ? 'border-2 border-gray-300 text-gray-400 cursor-not-allowed'
+                  : 'border-2 border-green-600 text-green-600 bg-white active:scale-[0.98]'
+              }`}
+            >
+              📦 Скачать
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1313,40 +1412,7 @@ function App() {
                 </h2>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {
-                      // Демо-данные для всех полей
-                      setUsername('example_conf_bot');
-                      setBotName('Ассистент Конференции');
-                      setShortDescription('Помощник участника конференции');
-                      setDescription(`Добро пожаловать!
-
-Я помогу вам:
-📋 Узнать программу мероприятия
-🎤 Найти информацию о спикерах
-📍 Сориентироваться по площадке
-❓ Ответить на частые вопросы
-
-Выберите нужный раздел в меню или напишите вопрос`);
-                      setAbout('Официальный бот конференции · t.me/example_link');
-                      setPrivacyPolicyUrl('https://example.com/privacy');
-                      setFirstMessageText(`Добро пожаловать!
-
-Нажмите кнопку ниже, чтобы узнать программу.`);
-                      setInlineButtonText('📋 Программа');
-                      setInlineButtonResponse(`Программа конференции
-
-9:00 — Регистрация, кофе
-10:00 — Открытие, приветствие
-10:30 — Основной доклад
-12:00 — Перерыв
-12:30 — Секционные выступления
-14:00 — Обед
-15:00 — Воркшопы
-17:00 — Нетворкинг`);
-                      // Генерация демо-картинок
-                      setAvatarUrl(generateDemoAvatar());
-                      setBotPicUrl(generateDemoBotPic());
-                    }}
+                    onClick={handleDemoClick}
                     disabled={isHydrating || isSharing}
                     className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 ${
                       isHydrating || isSharing
@@ -1366,23 +1432,6 @@ function App() {
                     }`}
                   >
                     Импорт
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    disabled={isSharing || isHydrating}
-                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all duration-200 flex items-center gap-2 ${
-                      isSharing || isHydrating
-                        ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                        : 'border-purple-300 text-purple-600 cursor-pointer btn-share'
-                    }`}
-                  >
-                    {isSharing && (
-                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                    {isSharing ? 'Загрузка...' : 'Поделиться'}
                   </button>
                   <button
                     onClick={() => setShowClearConfirm(true)}
@@ -1788,6 +1837,8 @@ function App() {
                     botPicUrl
                   }}
                   onDownload={handleExport}
+                  onShare={handleShare}
+                  isSharing={isSharing}
                 />
             </div>
           </div>
@@ -1857,6 +1908,46 @@ function App() {
         </div>
       )}
 
+      {/* Demo Data Confirmation Modal */}
+      {showDemoConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowDemoConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📝</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Загрузить демо-данные?
+              </h3>
+              <p className="text-sm text-gray-600">
+                Текущие данные будут заменены демонстрационными.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDemoConfirm(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={loadDemoData}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              >
+                Загрузить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast уведомления */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
       <SaveIndicator
@@ -1872,6 +1963,54 @@ function App() {
         accept=".zip"
         onChange={handleFileChange}
         style={{ display: 'none' }}
+      />
+
+      {/* Share Validation Modal */}
+      <ValidationModal
+        isOpen={showShareValidationModal}
+        onClose={() => setShowShareValidationModal(false)}
+        onConfirm={performShare}
+        action="share"
+        formData={{
+          username,
+          botName,
+          shortDescription,
+          description,
+          about,
+          privacyPolicyUrl,
+          firstMessageText,
+          inlineButtonText,
+          inlineButtonResponse,
+          avatarUrl,
+          botPicUrl
+        }}
+        avatarError={avatarError}
+        avatarWarning={avatarWarning}
+        isLoading={isSharing}
+        shareLimitInfo={getShareLimitInfo()}
+      />
+
+      {/* Download Validation Modal */}
+      <ValidationModal
+        isOpen={showDownloadValidationModal}
+        onClose={() => setShowDownloadValidationModal(false)}
+        onConfirm={performDownload}
+        action="download"
+        formData={{
+          username,
+          botName,
+          shortDescription,
+          description,
+          about,
+          privacyPolicyUrl,
+          firstMessageText,
+          inlineButtonText,
+          inlineButtonResponse,
+          avatarUrl,
+          botPicUrl
+        }}
+        avatarError={avatarError}
+        avatarWarning={avatarWarning}
       />
 
       {/* Share Link Modal */}
@@ -1929,11 +2068,21 @@ function App() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">📜 История версий</h2>
 
             <div className="space-y-4">
-              {/* v1.2.0 */}
+              {/* v1.2.5 */}
               <div className="border-l-4 border-blue-500 pl-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-gray-900">v1.2.0</span>
+                  <span className="font-bold text-gray-900">v1.2.5</span>
                   <span className="text-xs text-gray-500">• текущая версия</span>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Исправлен баг: иконка сохранения больше не появляется после ошибки лимита</li>
+                </ul>
+              </div>
+
+              {/* v1.2.0 */}
+              <div className="border-l-4 border-gray-300 pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900">v1.2.0</span>
                 </div>
                 <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
                   <li>Функция "Поделиться" с загрузкой конфигурации по ссылке (7 дней)</li>
@@ -1956,7 +2105,6 @@ function App() {
                   <li>Placeholder для пустых полей "Первое сообщение" и "Inline кнопка"</li>
                   <li>Улучшенные анимации и переходы для подсветки</li>
                   <li>Адаптивный layout для ultrawide мониторов</li>
-                  <li>Дизайн-токены и унифицированные анимации</li>
                 </ul>
               </div>
 

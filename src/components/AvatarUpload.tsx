@@ -51,6 +51,17 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
     return Math.floor((base64.length * 3) / 4) - padding;
   };
 
+  // Получение размера файла по URL через fetch
+  const getUrlFileSize = async (url: string): Promise<number> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      const contentLength = response.headers.get('Content-Length');
+      return contentLength ? parseInt(contentLength, 10) : 0;
+    } catch {
+      return 0;
+    }
+  };
+
   // Пересчёт imageInfo при внешнем изменении avatarUrl (демо-данные, восстановление из IndexedDB)
   useEffect(() => {
     if (!avatarUrl) {
@@ -64,14 +75,19 @@ export function AvatarUpload({ avatarUrl, onAvatarChange, onFocus, onBlur, onHov
     setIsImageLoading(true);
 
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const width = img.width;
       const height = img.height;
       const aspectRatio = width / height;
       const isSquare = aspectRatio >= 0.95 && aspectRatio <= 1.05;
 
-      // Вычисляем размер из data URL
-      const size = getDataUrlSize(avatarUrl);
+      // Вычисляем размер: для data URL из base64, для http(s) через fetch
+      let size = 0;
+      if (avatarUrl.startsWith('data:')) {
+        size = getDataUrlSize(avatarUrl);
+      } else if (avatarUrl.startsWith('http')) {
+        size = await getUrlFileSize(avatarUrl);
+      }
 
       setImageInfo({
         width,

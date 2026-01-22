@@ -329,11 +329,80 @@ const needsMarquee = botName.length > 20;
 
 ---
 
-## 10. Deployment
+## 10. Share Feature (Supabase)
 
-**Текущий статус:** Локальная разработка
+### 10.1 Архитектура
 
-**Рекомендуемый хостинг:** Vercel / Netlify / GitHub Pages (статический сайт)
+Функция "Поделиться" позволяет создать публичную ссылку на конфигурацию (действует 7 дней).
+
+**Backend:** Supabase (Free tier)
+- **База:** PostgreSQL с RLS
+- **Storage:** Supabase Storage для картинок
+- **Доступ:** Только через RPC-функции (без прямого SELECT)
+
+### 10.2 Схема данных
+
+Таблица `shared_configs`:
+- `id` UUID (PK)
+- `secret_hash` TEXT (хеш секрета, не сам секрет)
+- `payload` JSONB (тексты/настройки, URL картинок)
+- `created_at` TIMESTAMPTZ
+- `expires_at` TIMESTAMPTZ (now() + 7 days)
+
+### 10.3 RPC-функции
+
+**`share_create(payload_json)`**
+1. Валидация payload (размер, обязательные поля)
+2. Генерация `id` (UUID) и `secret` (случайная строка)
+3. Сохранение `secret_hash = hash(secret)`
+4. Возврат `{id, secret}`
+
+**`share_get(share_id, share_secret)`**
+1. Поиск по `id`
+2. Проверка `expires_at > now()` и совпадение хеша
+3. Возврат `payload` или ошибка
+
+### 10.4 Формат ссылки
+
+```
+https://tgvisual.ru/#share=<id>.<secret>
+```
+
+Fragment (`#`) не отправляется на сервер — меньше следов в логах.
+
+### 10.5 Flow
+
+**Создание:**
+1. Загрузка картинок в Supabase Storage → получение URL
+2. Сборка payload с URL картинок
+3. Вызов `share_create(payload)`
+4. Формирование ссылки `#share=id.secret`
+
+**Открытие:**
+1. Парсинг `#share=id.secret` при загрузке
+2. Вызов `share_get(id, secret)`
+3. Восстановление формы из payload
+4. Если истекло — сообщение "Ссылка истекла"
+
+### 10.6 Лимиты
+
+- **Дневной лимит:** 5 ссылок на пользователя (localStorage)
+- **TTL:** 7 дней
+- **Размер payload:** ~200KB max
+
+### 10.7 Free tier риски
+
+- Проект может "засыпать" при низкой активности (~7 дней)
+- Решение: heartbeat через GitHub Actions 2 раза в неделю
+- 90 дней на восстановление paused проекта
+
+---
+
+## 11. Deployment
+
+**Текущий статус:** Production (tgvisual.ru)
+
+**Хостинг:** GitHub Pages + Cloudflare (основной), GitHub Pages (зеркало)
 
 **Build команды:**
 ```bash
@@ -344,7 +413,7 @@ npm run preview  # Preview production build
 
 ---
 
-## 11. Changelog
+## 12. Changelog
 
 ### 2026-01-18
 - Добавлена валидация лимитов в DownloadModal
