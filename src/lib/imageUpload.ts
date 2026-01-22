@@ -10,6 +10,10 @@ export async function uploadImage(
   imageData: string,
   fileName: string
 ): Promise<string> {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+
   try {
     let blob: Blob;
 

@@ -11,7 +11,7 @@ import { ValidationModal } from './components/ValidationModal';
 import { isIndexedDBSupported, loadDraft, saveDraft, clearDraft } from './utils/indexedDB';
 import { canShare, incrementShareCount, getShareLimitInfo, SHARE_DAILY_LIMIT } from './utils/shareLimit';
 import packageJson from '../package.json';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { uploadImage } from './lib/imageUpload';
 
 // Throttle utility для оптимизации hover событий
@@ -427,6 +427,13 @@ function App() {
         // Защита от двойной загрузки в React StrictMode (dev)
         if (hasHydratedShareRef.current) return;
         hasHydratedShareRef.current = true;
+
+        // Если Supabase не настроен - показываем ошибку
+        if (!supabase) {
+          showWarning('Ошибка', 'Сервис "Поделиться" временно недоступен');
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
 
         // Устанавливаем флаг загрузки (блокирует кнопки)
         setIsHydrating(true);
@@ -891,6 +898,10 @@ function App() {
   // Фактическое создание публичной ссылки (вызывается после подтверждения в модалке)
   const performShare = async () => {
     if (isSharing) return;
+    if (!supabase) {
+      showWarning('Ошибка', 'Сервис "Поделиться" временно недоступен');
+      return;
+    }
 
     try {
       setIsSharing(true);
@@ -1332,24 +1343,26 @@ function App() {
         {/* Fixed Action Buttons */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
           <div className="flex gap-2">
-            {/* Share Button - PRIMARY */}
-            <button
-              onClick={handleShare}
-              disabled={isHydrating || isSharing}
-              className={`flex-1 py-3 rounded-xl font-medium shadow-lg transition-transform flex items-center justify-center gap-2 ${
-                isHydrating || isSharing
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-blue-600 text-white active:scale-[0.98]'
-              }`}
-            >
-              {isSharing && (
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              )}
-              {isSharing ? 'Загрузка...' : '🔗 Поделиться'}
-            </button>
+            {/* Share Button - PRIMARY (hidden if Supabase not configured) */}
+            {isSupabaseConfigured && (
+              <button
+                onClick={handleShare}
+                disabled={isHydrating || isSharing}
+                className={`flex-1 py-3 rounded-xl font-medium shadow-lg transition-transform flex items-center justify-center gap-2 ${
+                  isHydrating || isSharing
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-blue-600 text-white active:scale-[0.98]'
+                }`}
+              >
+                {isSharing && (
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {isSharing ? 'Загрузка...' : '🔗 Поделиться'}
+              </button>
+            )}
             {/* Download Button - SECONDARY */}
             <button
               onClick={handleExport}
