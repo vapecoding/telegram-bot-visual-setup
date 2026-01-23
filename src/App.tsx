@@ -13,6 +13,7 @@ import { canShare, incrementShareCount, getShareLimitInfo, SHARE_DAILY_LIMIT } f
 import packageJson from '../package.json';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { uploadImage } from './lib/imageUpload';
+import { notifyShareCreated, trackEvent } from './lib/notifications';
 
 // Throttle utility для оптимизации hover событий
 function throttle<T extends (...args: any[]) => void>(
@@ -981,6 +982,14 @@ function App() {
       setShareUrl(generatedShareUrl);
       setShowShareModal(true);
       setShowShareValidationModal(false);
+
+      // Аналитика и уведомления (не блокируют UI)
+      trackEvent('share_created');
+      notifyShareCreated({
+        shareUrl: generatedShareUrl,
+        botName: botName || undefined,
+        botUsername: username || undefined,
+      });
 
       // Показываем уведомление
       if (avatarFailed || botPicFailed) {
@@ -2088,7 +2097,10 @@ function App() {
                   <span className="text-xs text-gray-500">• текущая версия</span>
                 </div>
                 <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                  <li>Исправлен баг: иконка сохранения больше не появляется после ошибки лимита</li>
+                  <li>Модалка валидации перед "Поделиться" и "Скачать"</li>
+                  <li>Лимит 5 ссылок в день для защиты от спама</li>
+                  <li>Приложение работает даже если сервис недоступен</li>
+                  <li>Исправлены мелкие баги интерфейса</li>
                 </ul>
               </div>
 
