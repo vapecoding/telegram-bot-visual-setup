@@ -1,7 +1,7 @@
 {
   "name": "telegram-bot-visual-setup",
   "private": true,
-  "version": "1.2.6",
+  "version": "1.2.5",
   "description": "Web app for collecting and validating Telegram bot settings with live preview",
   "type": "module",
   "scripts": {

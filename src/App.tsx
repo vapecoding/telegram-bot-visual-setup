@@ -314,6 +314,7 @@ function App() {
   const hasHydratedShareRef = useRef(false); // Защита от двойной загрузки share-данных в StrictMode
   const saveTimeoutRef = useRef<number | null>(null);
   const [isSharing, setIsSharing] = useState(false); // Состояние загрузки для кнопки "Поделиться"
+  const [isSharingLong, setIsSharingLong] = useState(false); // Показать "ещё немного" после 10 сек
   const [shareUrl, setShareUrl] = useState<string | null>(null); // URL для модалки
   const [showShareModal, setShowShareModal] = useState(false); // Показ модалки со ссылкой
   const [showChangelogModal, setShowChangelogModal] = useState(false); // Показ модалки с историей версий
@@ -389,6 +390,21 @@ function App() {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showClearConfirm, showDemoConfirm]);
+
+  // Таймер для "долгой загрузки" - показывает доп. сообщение через 10 сек
+  useEffect(() => {
+    if (isSharing) {
+      const timer = window.setTimeout(() => {
+        setIsSharingLong(true);
+      }, 10000);
+      return () => {
+        clearTimeout(timer);
+        setIsSharingLong(false);
+      };
+    } else {
+      setIsSharingLong(false);
+    }
+  }, [isSharing]);
 
   // Скролл к полю формы при наведении на превью
   useEffect(() => {
@@ -1369,7 +1385,7 @@ function App() {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 )}
-                {isSharing ? 'Загрузка...' : '🔗 Поделиться'}
+                {isSharing ? (isSharingLong ? 'Ещё немного...' : 'Загрузка...') : '🔗 Поделиться'}
               </button>
             )}
             {/* Download Button - SECONDARY */}
@@ -2009,6 +2025,7 @@ function App() {
         avatarError={avatarError}
         avatarWarning={avatarWarning}
         isLoading={isSharing}
+        isLoadingLong={isSharingLong}
         shareLimitInfo={getShareLimitInfo()}
       />
 

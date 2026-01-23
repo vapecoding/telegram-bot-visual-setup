@@ -24,6 +24,7 @@ interface ValidationModalProps {
   avatarError: string | null;
   avatarWarning: string | null;
   isLoading?: boolean;
+  isLoadingLong?: boolean; // Показывать "ещё немного" после 10 сек
   // Rate limit info for share
   shareLimitInfo?: {
     used: number;
@@ -144,6 +145,7 @@ export function ValidationModal({
   avatarError,
   avatarWarning,
   isLoading = false,
+  isLoadingLong = false,
   shareLimitInfo
 }: ValidationModalProps) {
   if (!isOpen) return null;
@@ -270,7 +272,7 @@ export function ValidationModal({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             )}
-            {isLoading ? 'Загрузка...' : confirmText}
+            {isLoading ? (isLoadingLong ? 'Ещё немного...' : 'Загрузка...') : confirmText}
           </button>
         </div>
       </div>
