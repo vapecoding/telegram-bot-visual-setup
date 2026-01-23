@@ -396,6 +396,24 @@ Fragment (`#`) не отправляется на сервер — меньше 
 - Решение: heartbeat через GitHub Actions 2 раза в неделю
 - 90 дней на восстановление paused проекта
 
+### 10.8 Telegram уведомления
+
+При создании публичной ссылки отправляется уведомление в Telegram.
+
+**Компоненты:**
+- `supabase/functions/notify-telegram/` — Edge Function
+- `src/lib/notifications.ts` — клиентская утилита
+- Яндекс.Метрика событие `share_created`
+
+**Настройка Supabase:**
+- Edge Function: `notify-telegram` (verify_jwt = false)
+- Secrets: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+
+**Flow:**
+1. Клиент вызывает `supabase.functions.invoke('notify-telegram', { body })`
+2. Edge Function читает токен из secrets
+3. Отправляет сообщение через Telegram Bot API
+
 ---
 
 ## 11. Deployment
@@ -414,6 +432,12 @@ npm run preview  # Preview production build
 ---
 
 ## 12. Changelog
+
+### v1.2.5 (2026-01-23)
+- Telegram уведомления при создании публичных ссылок
+- Яндекс.Метрика события для аналитики
+- Graceful degradation если Supabase недоступен
+- Исправлен баг с иконкой сохранения после toast
 
 ### 2026-01-18
 - Добавлена валидация лимитов в DownloadModal
